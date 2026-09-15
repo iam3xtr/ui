@@ -1,0 +1,89 @@
+name: Release
+
+# Immutable tag/version policy: a release is cut by pushing an annotated tag
+# `vX.Y.Z` that matches `package.json`'s `version` field exactly. There is no
+# `on: push: branches` trigger here — pushing to `main` never publishes by
+# itself, and no branch other than a reviewed, tagged `main` commit can reach
+# the publish step. Re-pushing an existing tag does not republish: the
+# "Refuse to overwrite an already-published version" step below fails the
+# job before `npm publish` runs, and the registry itself rejects a second
+# publish of the same version regardless.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re-)run the release checks for (does not bypass the already-published guard)
+        required: true
+
+# Default: read-only. `packages: write` is requested only on the `release`
+# job below (a "trusted release context" — reached exclusively by a pushed
+# `v*.*.*` tag, or an explicit manual dispatch that still goes through every
+# gate), never on pull_request or a plain branch push. GITHUB_TOKEN is scoped
+# to this repository only and is never written to `.npmrc`, `.gitmodules`,
+# a log line, or a build artifact — `actions/setup-node`'s `registry-url`
+# input wires it into a throwaway `.npmrc` for the `npm publish` step only,
+# via the `NODE_AUTH_TOKEN` environment variable.
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout tagged commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@iam3xtr"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint styles
+        run: npm run lint:style
+
+      - name: Build (tokens.css / theme.css)
+        run: npm run build
+
+      - name: Test (export/theme-isolation/allowlist/pack contract)
+        run: npm test
+
+      - name: Verify tag matches package.json version
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::Tag $tag does not match package.json version $version — refusing to publish a mismatched pair."
+            exit 1
+          fi
+
+      - name: Refuse to overwrite an already-published version
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "$name@$version" version --registry https://npm.pkg.github.com >/dev/null 2>&1; then
+            echo "::error::$name@$version is already published. Publish a new version instead of re-tagging an existing one; see README.md#releasing for the rollback procedure."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

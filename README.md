@@ -89,3 +89,24 @@ npm install   # pulls bulma/buefy/sass as devDependencies, needed to build theme
 npm run build # compiles dist/tokens.css and dist/theme.css
 npm test      # builds, then runs the export/allowlist/pack contract tests
 ```
+
+## Releasing
+
+Publish this package **before** `@iam3xtr/vue` — `@iam3xtr/vue` declares
+`@iam3xtr/ui` as a peer dependency, so a consumer resolving both must always
+find a compatible `@iam3xtr/ui` version already published. See
+[`packages/consumers/README.md`](https://github.com/iam3xtr/trickster-ui-kit/blob/main/packages/consumers/README.md)
+in the UI Kit repo for the recommended-pair matrix, the tarball/registry
+consumer test matrix, and the partial-publish/rollback procedure.
+
+A release is cut by pushing a tag `vX.Y.Z` matching `package.json`'s
+`version` exactly — [`.github/workflows/release.yml`](.github/workflows/release.yml)
+then runs the full test suite, refuses a tag/version mismatch or an
+already-published version, and publishes to `npm.pkg.github.com` under a
+GitHub `environment: release` (configure required reviewers there so a human
+approves every publish). `packages:write` is requested only by that one job;
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml), which runs on every
+push/PR, stays `contents: read`. Full credential scoping (`GITHUB_TOKEN` vs
+the cross-repo read token) and denied-access diagnostics are documented once
+in `packages/consumers/README.md`'s "CI, release workflow and credentials"
+section, not duplicated here.

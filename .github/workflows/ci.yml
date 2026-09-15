@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# Least-privilege default: this workflow only ever reads its own repository.
+# It never requests `packages:write` — that permission is granted exclusively
+# to release.yml's `release` job, and only for a tag push (see that file).
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint styles
+        run: npm run lint:style
+
+      - name: Build (tokens.css / theme.css)
+        run: npm run build
+
+      - name: Test (export/theme-isolation/allowlist/pack contract)
+        run: npm test
+
+      - name: Inspect pack contents
+        run: npm pack --dry-run
