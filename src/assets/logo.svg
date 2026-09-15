@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Кит-версия фирменного знака кабинета (get.3xtr.im/src/assets/logo.svg):
+     та же геометрия (виджет 3 вертикальных + 3 горизонтальных блока,
+     viewBox 0 0 68 32), перекрашенная в фирменный фиолетовый кита
+     (оттенок $primary hsl(264, 52%, 60%), см.
+     src/styles/_trickster-tokens.scss) вместо исходных зелёного/оранжевого.
+     Левая группа (block-a, вертикальные блоки) светлее правой (block-b);
+     разброс dark/medium/light внутри каждой группы уже, чем в оригинале
+     кабинета, — объёмность мягче, не бликует. Используется как favicon
+     кита и синхронизируется в кабинет через ui-kit.allowlist.json
+     (targetPath совпадает с исходным favicon кабинета — решение
+     пользователя 2026-09-10). -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="680px" height="320px" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 68 32"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .block-a .dark {fill:#895CCC}
+    .block-a .medium {fill:#9A73D3}
+    .block-a .light {fill:#AB8BDA}
+    .block-b .dark {fill:#A583D8}
+    .block-b .medium {fill:#BBA2E2}
+    .block-b .light {fill:#D2C1EB}
+   ]]>
+  </style>
+ </defs>
+ <g class="logo">
+  <g class="block-a">
+    <rect class="dark"   width="8" height="32" x="0" y="0" />
+    <rect class="medium" width="7" height="31" x="1" y="1" />
+    <rect class="light"  width="6" height="30" x="2" y="2" />
+    <rect class="dark"   width="8" height="32" x="12" y="0" />
+    <rect class="medium" width="7" height="31" x="13" y="1" />
+    <rect class="light"  width="6" height="30" x="14" y="2" />
+    <rect class="dark"   width="8" height="32" x="24" y="0" />
+    <rect class="medium" width="7" height="31" x="25" y="1" />
+    <rect class="light"  width="6" height="30" x="26" y="2" />
+  </g>
+  <g class="block-b">
+    <rect class="dark"   width="32" height="8" x="36" y="0" />
+    <rect class="medium" width="31" height="7" x="37" y="1" />
+    <rect class="light"  width="30" height="6" x="38" y="2" />
+    <rect class="dark"   width="32" height="8" x="36" y="12" />
+    <rect class="medium" width="31" height="7" x="37" y="13" />
+    <rect class="light"  width="30" height="6" x="38" y="14" />
+    <rect class="dark"   width="32" height="8" x="36" y="24" />
+    <rect class="medium" width="31" height="7" x="37" y="25" />
+    <rect class="light"  width="30" height="6" x="38" y="26" />
+  </g>
+ </g>
+</svg>

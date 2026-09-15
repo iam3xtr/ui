@@ -1,0 +1,4883 @@
+// =============================================================================
+// @iam3xtr/ui — full Buefy/Bulma theme
+// =============================================================================
+//
+// Целевая конфигурация потребителя:
+//   - Vue 3
+//   - Buefy 3.x (peerDependency)
+//   - Bulma 1.x (peerDependency, via Buefy)
+//   - Dart Sass
+//
+// Подключение:
+//   import Buefy from "buefy";
+//   import "@iam3xtr/ui/styles/theme.scss"; // or the compiled theme.css
+//
+// Это НЕ tokens-only контракт: подключает Bulma/Buefy source SCSS и требует,
+// чтобы потребитель сам поставил `bulma`/`buefy` (см. package.json
+// peerDependencies) и подключил их ровно один раз. Для tokens-only без
+// Bulma/Buefy используйте `@iam3xtr/ui/styles/tokens.scss` (`tokens.css`).
+//
+// Origin: ported from trickster-ui-kit `src/styles/trickster-buefy.scss`,
+// commit 52ea8eb90d0166cdcfd71b2e1b0576357de434d1 (Task A11.2).
+//
+// ВАЖНО:
+//   При использовании этого файла не импортируйте готовый
+//   "buefy/dist/css/buefy.css", иначе получите два набора стилей.
+//
+// Переключение темы:
+//   document.documentElement.dataset.theme = "dark";
+//   document.documentElement.dataset.theme = "light";
+//
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Оглавление
+// -----------------------------------------------------------------------------
+//   1. Tokens              — runtime CSS custom properties (light/dark theme)
+//   2. Shell               — app shell, page container, icons, loader
+//   3. Navigation          — sidebar, topbar chrome, brand, user/workspace triggers
+//   4. Toolbar             — search field, toolbar dropdown, page-level toolbars
+//   5. Tabs                — toolbar tabs strip, Buefy tabs
+//   6. Tables              — table, table-wrapper, pagination
+//   7. Forms               — inputs, buttons, switches, checkboxes/radios
+//   8. Cards and catalogs  — surfaces, KPI cards, catalog grids, entity cards
+//   9. States              — notifications, messages, tags, progress, empty state
+//  10. Overlays            — dropdown content, modal, tooltip
+//  11. Tariffs             — sidebar tariff summary, tariff selector
+//  12. Conversations       — workbench layout, conversation list/chat/properties
+//  13. Utilities           — layout helpers, settings screen, theme toggle, auth
+//  14. Responsive          — breakpoint overrides for the sections above
+//  15. Wizard              — agent creation wizard shell, progress, scenario picker, hints
+//  16. Deprecated aliases  — transitional `@deprecated` selectors, see below
+// -----------------------------------------------------------------------------
+
+@use "./trickster-tokens" as tr;
+
+// Компилируемые переменные Bulma.
+// Buefy наследует тему Bulma, поэтому основную геометрию и бренд задаём здесь.
+@use "bulma/sass" with (
+  $primary: tr.$primary,
+  $link: tr.$link,
+
+  $success: tr.$success,
+  $info: tr.$info,
+  $warning: tr.$warning,
+  $danger: tr.$danger,
+
+  $family-primary: tr.$font-family-sans,
+  $family-secondary: tr.$font-family-sans,
+  $family-code: tr.$font-family-mono,
+
+  $radius-small: tr.$radius-small,
+  $radius: tr.$radius,
+  $radius-large: tr.$radius-large,
+  $radius-rounded: tr.$radius-rounded,
+
+  $control-border-width: 1px,
+  $input-shadow: none,
+
+  // Bulma/Buefy dropdowns and modals share the kit's z-index scale — see
+  // trickster-tokens.scss "Z-index scale".
+  $dropdown-content-z: tr.$z-dropdown,
+  $modal-z: tr.$z-modal
+);
+
+// Подключаем стили компонентов Buefy после конфигурации Bulma.
+@use "buefy/src/scss/buefy";
+
+// Section "1. Tokens" (runtime `--tr-*` custom properties) lives in the
+// tokens-only entrypoint so it can be built and shipped standalone; the full
+// theme reuses it instead of duplicating the block.
+@use "./tokens";
+
+// =============================================================================
+// 2. Shell
+// =============================================================================
+
+html,
+body,
+#app {
+  min-height: 100%;
+  background: var(--tr-app-bg);
+  color: var(--tr-text);
+}
+
+body {
+  margin: 0;
+  font-family: tr.$font-family-sans;
+  font-size: tr.$font-size-base;
+  line-height: 1.45;
+  transition:
+    background-color tr.$transition-normal,
+    color tr.$transition-normal;
+}
+
+a {
+  color: var(--tr-primary);
+}
+
+a:hover {
+  color: var(--tr-primary-hover);
+}
+
+::selection {
+  color: var(--tr-text-on-primary);
+  background: var(--tr-primary);
+}
+
+.tr-app {
+  --tr-content-inline-offset: max(
+    0px,
+    (
+      100vw
+      - #{tr.$sidebar-width}
+      - #{tr.$space-12}
+      - #{tr.$content-max-width}
+    ) / 2
+  );
+
+  min-height: 100vh;
+  background: var(--tr-app-bg);
+  color: var(--tr-text);
+}
+
+.tr-app--fluid {
+  --tr-content-inline-offset: 0px;
+}
+
+.tr-app-shell {
+  display: grid;
+  grid-template-columns: tr.$sidebar-width minmax(0, 1fr);
+  min-height: calc(100vh - #{tr.$topbar-height});
+}
+
+.tr-sidebar {
+  position: sticky;
+  z-index: var(--tr-z-sidebar);
+  top: tr.$topbar-height;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-6;
+  height: calc(100vh - #{tr.$topbar-height});
+  overflow-y: auto;
+  padding: tr.$space-6 tr.$space-4;
+  background: var(--tr-sidebar-bg);
+  border-right: 1px solid var(--tr-border-soft);
+}
+
+.tr-sidebar__nav {
+  flex: 1 0 auto;
+}
+
+.tr-main {
+  min-width: 0;
+}
+
+.tr-topbar {
+  position: sticky;
+  z-index: var(--tr-z-sticky-header);
+  top: 0;
+  min-height: tr.$topbar-height;
+  display: flex;
+  align-items: center;
+  gap: tr.$space-4;
+  padding: 0 tr.$space-6;
+  padding-inline-start: tr.$space-4;
+  background: var(--tr-topbar-bg);
+  border-bottom: 1px solid var(--tr-border-soft);
+  backdrop-filter: blur(14px);
+}
+
+.tr-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin-inline-start: auto;
+}
+
+// Auth screens' bare Navbar (`<Navbar minimal>`, Task A5.10/A8.7): no
+// workspace/resource/notifications/user chrome, so it should read as part of
+// the auth page rather than a product topbar — no fill, no border/blur.
+.tr-topbar--minimal {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+}
+
+.tr-topbar__auth-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+// NavbarMenu Teleport target (see App.vue / Navbar.vue's `menu` slot): must
+// not add a flex item of its own, including while empty, so a page without a
+// menu leaves no gap in .tr-topbar.
+.tr-topbar > .tr-topbar__menu {
+  display: contents;
+}
+
+.tr-page {
+  padding: tr.$space-6;
+}
+
+.tr-page__content {
+  width: 100%;
+  max-width: tr.$content-max-width;
+  margin-inline: auto;
+}
+
+.tr-page__content--fluid {
+  max-width: none;
+}
+
+// Vertical rhythm between a view's header/toolbar/main sections. Opt-in:
+// existing screens keep their own spacing until they migrate to it.
+.tr-page__container {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-6;
+}
+
+.tr-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: tr.$space-6;
+  margin-bottom: tr.$space-6;
+}
+
+.tr-page-title {
+  margin: 0;
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-xl;
+  font-weight: tr.$font-weight-bold;
+  line-height: 1.2;
+}
+
+.tr-page-subtitle {
+  margin-top: tr.$space-1;
+  color: var(--tr-text-muted);
+}
+
+// PageHeader.vue (src/components/common/PageHeader.vue, Task A4.2): the
+// back-link + title/subtitle group that sits inside .tr-page-header, plus its loading
+// skeleton (title-only/subtitle-only omitted means "loading").
+.page-header__main {
+  gap: tr.$space-4;
+}
+
+.page-header__back {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--tr-text);
+  background-color: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  transition:
+    background-color tr.$transition-fast,
+    color tr.$transition-fast;
+}
+
+.page-header__back:hover {
+  color: var(--tr-primary);
+  background-color: var(--tr-surface-hover);
+}
+
+.page-header__title {
+  margin: 0;
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-2xl;
+  font-weight: tr.$font-weight-bold;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+
+.page-header__subtitle {
+  margin: tr.$space-2 0 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-base;
+  letter-spacing: 0.05em;
+}
+
+.page-header__skeleton--title {
+  width: 16rem;
+  height: 2.25rem;
+}
+
+.page-header__skeleton--subtitle {
+  width: 20rem;
+  height: 1.25rem;
+  margin-top: tr.$space-2;
+}
+
+.tr-icon {
+  // Custom SVGs (src/assets/icons/**) ship with `fill="currentColor"` on
+  // their own root element; this rule only has to not fight that — any
+  // wrapping `has-text-*`/`color` context recolors the icon the same way it
+  // recolors adjacent text, in both themes.
+  fill: currentColor;
+}
+
+.tr-icon--placeholder {
+  border-radius: tr.$radius-rounded;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--tr-icon-placeholder-stripe),
+    var(--tr-icon-placeholder-stripe) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+.tr-loader {
+  display: grid;
+  place-items: center;
+  color: var(--tr-primary);
+}
+
+.tr-loader__mark {
+  display: block;
+  height: 1em;
+  width: auto;
+  aspect-ratio: 68 / 32;
+}
+
+.tr-loader--inline {
+  display: inline-grid;
+  height: 1em;
+  vertical-align: middle;
+}
+
+.tr-loader--section {
+  width: 100%;
+  padding: tr.$space-8 tr.$space-4;
+}
+
+.tr-loader--section .tr-loader__mark {
+  height: 2.5rem;
+}
+
+.tr-loader--standalone {
+  min-height: min(520px, calc(100vh - 160px));
+}
+
+.tr-loader--screen {
+  min-height: 100dvh;
+  width: 100%;
+}
+
+// Shared loading-placeholder block (fill/radius/pulse). Consumers size the
+// block with their own width/height; this class owns only fill, radius, and
+// animation.
+.tr-skeleton-block {
+  border-radius: tr.$radius;
+  background-color: var(--tr-surface-3);
+  animation: tr-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tr-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-skeleton-block {
+    animation: none;
+  }
+}
+
+.tr-loader--screen .tr-loader__mark {
+  height: 4rem;
+}
+
+// =============================================================================
+// 3. Navigation
+// =============================================================================
+
+// Shared marker for the topbar's dropdown panels (mobile nav, workspace,
+// notifications, user menu) — caps their width to the viewport on narrow
+// screens so a panel never forces horizontal scroll. Per-dropdown classes
+// (.tr-workspace-dropdown, .tr-notifications-dropdown, .tr-user-dropdown,
+// .tr-mobile-nav) still own their own width/layout specifics.
+.tr-navbar-dropdown .dropdown-content {
+  width: min(320px, calc(100vw - #{tr.$space-8}));
+}
+
+.tr-mobile-nav {
+  display: none;
+}
+
+.tr-mobile-nav__trigger {
+  width: 36px;
+  min-height: 36px;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+}
+
+.tr-mobile-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-mobile-workspace__label {
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-2;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-medium;
+}
+
+// W2 (Task A10.7): single-workspace mobile nav shows the name as plain text
+// instead of a single-option `b-select` — see Navbar.vue.
+.tr-mobile-workspace__value {
+  font-size: tr.$font-size-sm;
+  font-weight: tr.$font-weight-medium;
+  color: var(--tr-text);
+}
+
+.tr-mobile-nav-section-title {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+  color: var(--tr-text-subtle) !important;
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+  font-size: tr.$font-size-xs !important;
+  font-weight: tr.$font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tr-mobile-menu-header {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+  display: none !important;
+}
+
+.tr-mobile-menu-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-4;
+}
+
+.tr-mobile-menu-header .tr-brand {
+  width: auto;
+  justify-content: flex-start;
+}
+
+.tr-mobile-menu-profile {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-mobile-menu-header__close {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: tr.$radius-rounded;
+}
+
+.tr-mobile-menu-header__close:hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+}
+
+.tr-topbar__links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tr.$space-1;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tr-topbar__links a {
+  padding: 6px tr.$space-2;
+  color: var(--tr-text-muted);
+  border-radius: tr.$radius;
+  font-size: tr.$font-size-base;
+  line-height: 1.5;
+  transition:
+    color tr.$transition-fast,
+    background-color tr.$transition-fast;
+}
+
+.tr-topbar__links a:hover,
+.tr-topbar__links a:focus-visible {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+}
+
+.tr-topbar__links a:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 1px;
+}
+
+.tr-brand {
+  width: calc(#{tr.$sidebar-width} - #{tr.$space-8} - #{tr.$space-3});
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: tr.$space-1;
+  flex: 0 0 auto;
+  transition: opacity tr.$transition-fast;
+}
+
+.tr-brand:hover {
+  opacity: 0.82;
+}
+
+.tr-brand__logo {
+  width: 36px;
+  height: 15px;
+  display: block;
+  flex: 0 0 auto;
+  fill: hsl(264, 52%, 60%);
+}
+
+.tr-brand__logo-dark {
+  fill: hsl(264, 52%, 55%);
+}
+
+.tr-brand__logo-light {
+  fill: hsl(264, 52%, 65%);
+}
+
+.tr-brand__name {
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-lg;
+  font-weight: tr.$font-weight-semibold;
+  line-height: 1;
+}
+
+.tr-navbar-trigger {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-2;
+  padding: tr.$space-1 tr.$space-2;
+  color: var(--tr-text);
+  font: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: tr.$radius;
+  cursor: pointer;
+  transition:
+    color tr.$transition-fast,
+    background-color tr.$transition-fast,
+    border-color tr.$transition-fast,
+    opacity tr.$transition-fast;
+}
+
+.tr-navbar-trigger:hover,
+.dropdown.is-active .tr-navbar-trigger {
+  color: var(--tr-text-strong);
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.82;
+}
+
+.tr-navbar-trigger:focus-visible {
+  outline: none;
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+}
+
+.tr-workspace-trigger {
+  min-height: 36px;
+  height: 36px;
+  max-width: 220px;
+  padding-block: 2px;
+  padding-inline: tr.$space-3;
+  font-size: tr.$font-size-base;
+  background: var(--tr-input-bg);
+  border-color: var(--tr-border);
+}
+
+.tr-workspace-trigger:hover {
+  background: var(--tr-input-bg);
+  border-color: var(--tr-text-subtle);
+  opacity: 1;
+}
+
+.dropdown.is-active .tr-workspace-trigger {
+  background: var(--tr-input-bg);
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+  opacity: 1;
+}
+
+.tr-workspace-trigger__selection {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-1;
+}
+
+.tr-navbar-trigger__label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: tr.$font-weight-medium;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-workspace-switch-icon {
+  flex: 0 0 auto;
+  color: var(--tr-text-subtle);
+}
+
+.tr-notifications-trigger {
+  position: relative;
+  width: 36px;
+  min-height: 36px;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+}
+
+.tr-notifications-trigger__badge {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  display: inline-grid;
+  place-items: center;
+  padding-inline: 4px;
+  color: tr.$neutral-0;
+  background: var(--tr-primary);
+  border: 2px solid var(--tr-topbar-bg);
+  border-radius: tr.$radius-rounded;
+  font-size: 9px;
+  font-weight: tr.$font-weight-semibold;
+  line-height: 1;
+}
+
+.tr-user-trigger {
+  padding-inline-start: tr.$space-3;
+}
+
+.tr-user-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: tr.$space-1;
+  text-align: start;
+  line-height: 1;
+}
+
+.tr-user-summary strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-user-avatar {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border: 1px solid var(--tr-primary-border);
+  border-radius: tr.$radius-rounded;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-user-resource,
+.tr-user-resource-separator {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+  display: none !important;
+}
+
+.menu-label {
+  color: var(--tr-text-subtle);
+  font-size: tr.$font-size-xs;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tr-sidebar .menu-label {
+  margin: 0 0 tr.$space-2;
+  padding-inline-end: tr.$space-3;
+  font-weight: tr.$font-weight-semibold;
+  line-height: 1.4;
+  text-align: end;
+}
+
+.tr-sidebar .menu-list + .menu-label {
+  margin-top: tr.$space-8;
+}
+
+.tr-sidebar .menu-list li + li {
+  margin-top: 1px;
+}
+
+.tr-sidebar .menu-list a {
+  width: fit-content;
+  max-width: 100%;
+  justify-content: flex-end;
+  margin-inline-start: auto;
+  min-height: 36px;
+  padding-block: 6px;
+  padding-inline-end: tr.$space-3;
+}
+
+.menu-list a {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-3;
+  min-height: 40px;
+  padding: tr.$space-2 tr.$space-3;
+  color: var(--tr-text-muted);
+  background-color: transparent;
+  border-radius: tr.$radius;
+  line-height: 1.4;
+  transition:
+    color tr.$transition-fast,
+    background-color tr.$transition-fast;
+}
+
+.menu-list a:hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+}
+
+.menu-list a.is-active {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-user-summary small {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+// =============================================================================
+// 4. Toolbar
+// =============================================================================
+
+.tr-toolbar {
+  display: flex;
+}
+
+.tr-search-field {
+  --bulma-input-height: 36px;
+
+  position: relative;
+}
+
+.tr-search-field--navbar {
+  width: clamp(220px, 18vw, 300px);
+  flex: 0 1 clamp(220px, 18vw, 300px);
+  margin-inline-start: calc(#{tr.$space-8} + #{tr.$space-1});
+}
+
+.tr-search-field .input {
+  height: 36px;
+  padding-block: calc((36px - 1.5em - 2px) / 2);
+  padding-inline-end: 68px;
+  font-size: tr.$font-size-base;
+  font-weight: tr.$font-weight-normal;
+  line-height: 1.5;
+}
+
+.tr-search-field .icon .mdi::before {
+  position: relative;
+  top: -1px;
+  font-size: tr.$font-size-base;
+}
+
+.tr-search-field__shortcut {
+  position: absolute;
+  top: 50%;
+  right: tr.$space-2;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-3);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-small;
+  font-family: tr.$font-family-mono;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-normal;
+  line-height: 1;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.tr-toolbar-dropdown { display: inline;}
+
+.tr-toolbar-dropdown .dropdown-content {
+  min-width: 200px;
+}
+
+.tr-toolbar-dropdown__trigger.button {
+  width: 100%;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+  padding-inline: tr.$space-3;
+  font-size: tr.$font-size-base;
+  font-weight: tr.$font-weight-normal;
+}
+
+.tr-toolbar-dropdown__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-toolbar-dropdown__trigger .icon {
+  flex: 0 0 auto;
+  color: var(--tr-text-subtle);
+  transition: transform tr.$transition-fast;
+}
+
+.tr-toolbar-dropdown.is-active .tr-toolbar-dropdown__trigger .icon {
+  transform: rotate(180deg);
+}
+
+.tr-toolbar-dropdown.is-active .tr-toolbar-dropdown__trigger {
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+}
+
+.tr-page-toolbar {
+  display: flex;
+  align-items: center;
+  // Kept single-line rather than wrapping: below the .tr-page-toolbar__filter
+  // breakpoint the filter pills hide in favor of .tr-mobile-filters, and
+  // .tr-page-toolbar__search/.tr-page-toolbar__filters already shrink to fit
+  // instead of dropping to a second row.
+  flex-wrap: nowrap;
+  gap: tr.$space-3;
+  margin-bottom: 0;
+}
+
+.tr-page-toolbar__search {
+  width: min(100%, 360px);
+  flex: 0 1 360px;
+}
+
+.tr-page-toolbar__filter {
+  width: 180px;
+  flex: 0 0 180px;
+}
+
+// Group of related actions (buttons, icon-buttons) within a toolbar or
+// section header — replaces ad hoc `.buttons`/inline-style flex rows.
+.tr-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-page-toolbar__filters {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.tr-page-toolbar__filters .tr-page-toolbar__filter {
+  width: auto;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+// Renamed from .tr-knowledge__toolbar in Task A3.6: the "toolbar" contract
+// is owned exclusively by .tr-page-toolbar (search/filters/action-group);
+// this row has neither and is not that contract. Not present in get.3xtr.im
+// markup at time of rename, so no transitional alias is required (rule R8).
+// Consumed by `components/knowledge/Files.vue`'s "N объектов" header row
+// (Task A5.6) — the split-pane `.tr-knowledge__details*` rules that used to
+// sit next to this one were removed in that task along with the master-
+// detail layout on `Knowledge.vue` (collection detail is now its own route).
+.tr-knowledge__items-header {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-4;
+  padding: tr.$space-2 tr.$space-5;
+  color: var(--tr-text-muted);
+  border-bottom: 1px solid var(--tr-divider);
+}
+
+.tr-mobile-filters {
+  display: none;
+}
+
+// =============================================================================
+// 5. Tabs
+// =============================================================================
+
+.tr-navbar-tabs {
+  display: flex;
+  align-items: stretch;
+  align-self: end;
+  gap: tr.$space-1;
+  min-width: 0;
+  margin-inline-start: calc(#{tr.$space-8} + var(--tr-content-inline-offset));
+}
+
+.tr-navbar-tabs__link {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 tr.$space-3;
+  color: var(--tr-text-muted);
+  border-bottom: 2px solid transparent;
+  font-size: tr.$font-size-sm;
+  font-weight: tr.$font-weight-medium;
+  white-space: nowrap;
+  transition: color tr.$transition-fast, border-color tr.$transition-fast;
+}
+
+.tr-navbar-tabs__link:hover,
+.tr-navbar-tabs__link:focus-visible {
+  color: var(--tr-text-strong);
+}
+
+.tr-navbar-tabs__link:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: -2px;
+}
+
+.tr-navbar-tabs__link.router-link-exact-active {
+  color: var(--tr-primary);
+  border-bottom-color: currentcolor;
+}
+
+// Icon-only tab: matches the conversation action's 40px box and 24px icon.
+.tr-navbar-tabs__link--icon {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  flex: 0 0 40px;
+  align-self: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.tr-navbar-tabs__icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tr-navbar-tabs__icon::before {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tabs a {
+  color: var(--tr-text-muted);
+  border-bottom-color: var(--tr-border);
+}
+
+.tabs li.is-active a {
+  color: var(--tr-primary);
+  border-bottom-color: var(--tr-primary);
+}
+
+.tabs ul {
+  border-bottom-color: var(--tr-border);
+}
+
+// =============================================================================
+// 6. Tables
+// =============================================================================
+
+.table-wrapper {
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  overflow: hidden;
+}
+
+.table {
+  color: var(--tr-text);
+  background: transparent;
+}
+
+.table thead th {
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-2);
+  border-color: var(--tr-border-soft);
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.table td {
+  color: var(--tr-text);
+  border-color: var(--tr-border-soft);
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover {
+  background: var(--tr-surface-hover);
+}
+
+.table tbody tr.is-selected {
+  color: var(--tr-text);
+  background: var(--tr-primary-soft);
+}
+
+.pagination-link,
+.pagination-next,
+.pagination-previous {
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+  border-color: var(--tr-border);
+}
+
+.pagination-link.is-current {
+  color: var(--tr-text-on-primary);
+  background: var(--tr-primary);
+  border-color: var(--tr-primary);
+}
+
+// PaginationControls.vue foundation (get.3xtr.im component, no kit
+// equivalent — Stage A4 decided b-pagination covers the kit, see
+// docs/design-system.md "Допустимые исключения"): a compact prev/next +
+// "start-end / total" summary pattern, distinct from
+// .pagination-link/b-pagination above.
+.pagination-controls {
+  gap: tr.$space-3;
+}
+
+.pagination-controls__summary {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.pagination-controls__buttons {
+  display: flex;
+  gap: tr.$space-2;
+}
+
+.pagination-controls__btn {
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: tr.$space-3;
+  color: var(--tr-text);
+  background-color: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  font-size: tr.$font-size-sm;
+  font-weight: tr.$font-weight-medium;
+  cursor: pointer;
+  transition:
+    background-color tr.$transition-fast,
+    color tr.$transition-fast,
+    opacity tr.$transition-fast;
+}
+
+.pagination-controls__btn:hover:not(:disabled) {
+  color: var(--tr-primary);
+  background-color: var(--tr-surface-hover);
+}
+
+.pagination-controls__btn:disabled {
+  color: var(--tr-text-subtle);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+// Wrap a `<table>` in .tr-table-wrapper to contain horizontal overflow to
+// the table itself instead of the page (.tr-page/body never scroll
+// horizontally). `-webkit-overflow-scrolling` keeps momentum scroll on iOS.
+.tr-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tr-table-wrapper .is-ellipsis {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+// Mobile row-stacking (.tr-table--stack) is a breakpoint override — see
+// section 14 (Responsive), "@media (max-width: 767px)" block. It is a legacy
+// hand-rolled table pattern kept only for downstream consumers that have not
+// migrated to `b-table` yet — new markup uses `b-table`'s own `mobile-cards`
+// prop instead (styled below via `.b-table .table-wrapper.has-mobile-cards`,
+// already covered by `.table`/`.table-wrapper` above; Buefy supplies the
+// breakpoint behavior itself).
+
+// Single base look for every `b-table` (the `.table`/`.table-wrapper` rules
+// above already apply, since that's what Buefy renders inside `.b-table`).
+// Variants are modifiers on the root `.b-table` element (R6), passed as
+// `class="tr-table--compact"` / `class="tr-table--breakdown"` on `<b-table>`
+// — never a parallel table component or duplicated column markup.
+
+// `--compact`: denser rows for long, low-action lists (limits, log lines).
+.b-table.tr-table--compact .table th,
+.b-table.tr-table--compact .table td {
+  padding: tr.$space-2 tr.$space-3;
+}
+
+// `--breakdown`: headerless label/value summary (cost breakdown, usage
+// summary) — no hover affordance, since rows carry no row-level action.
+.b-table.tr-table--breakdown .table thead {
+  display: none;
+}
+
+.b-table.tr-table--breakdown .table td {
+  padding: tr.$space-2 tr.$space-3;
+}
+
+.b-table.tr-table--breakdown .table td:last-child {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+  text-align: end;
+}
+
+// =============================================================================
+// 7. Forms
+// =============================================================================
+
+.help,
+.label.is-small {
+  color: var(--tr-text-muted);
+}
+
+.label {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.input,
+.textarea,
+.select select,
+.taginput .taginput-container,
+.autocomplete .input,
+.numberinput .input {
+  color: var(--tr-text);
+  background: var(--tr-input-bg);
+  border-color: var(--tr-border);
+  box-shadow: none;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--tr-input-placeholder);
+}
+
+.input:hover,
+.textarea:hover,
+.select select:hover,
+.taginput .taginput-container:hover {
+  border-color: var(--tr-text-subtle);
+}
+
+.input:focus,
+.textarea:focus,
+.select select:focus,
+.taginput .taginput-container.is-focusable:focus-within {
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+}
+
+.select:not(.is-multiple):not(.is-loading)::after {
+  border-color: var(--tr-primary);
+}
+
+.button {
+  border-color: var(--tr-border);
+  box-shadow: none;
+  transition:
+    background-color tr.$transition-fast,
+    border-color tr.$transition-fast,
+    color tr.$transition-fast,
+    transform tr.$transition-fast;
+}
+
+.button:not(.is-primary):not(.is-link):not(.is-success):not(.is-warning):not(.is-danger):not(.is-info) {
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+}
+
+.button:not(.is-primary):hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+  border-color: var(--tr-text-subtle);
+}
+
+.button.is-primary {
+  color: var(--tr-text-on-primary);
+  background: var(--tr-primary);
+  border-color: transparent;
+}
+
+.button.is-primary:hover {
+  background: var(--tr-primary-hover);
+}
+
+.button.is-primary:active {
+  transform: translateY(1px);
+}
+
+.button.is-light.is-primary {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border-color: var(--tr-primary-border);
+}
+
+.switch input[type="checkbox"]:checked + .check {
+  background: var(--tr-primary);
+}
+
+.checkbox,
+.radio,
+.switch {
+  color: var(--tr-text);
+}
+
+// Full-page-form foundation: layout, destructive zone and save/cancel
+// footer for a full-screen settings/danger-zone form. Label, help text,
+// validation error/type and secret-field reveal are b-field/b-input's own
+// job (label, message, type="is-danger", password-reveal) — this stylesheet
+// does not re-implement them. Structural rules only — validation/submit
+// logic stays in each form component; nothing here fetches data or gates
+// permissions. First real consumer: AgentSettings (Task A5.4, `.tr-form`
+// only — no destructive zone/footer, the fixture has nothing irreversible to
+// gate). `.tr-form__footer` also has `knowledge/Settings.vue`'s save/cancel
+// row (Task A5.6). `.tr-destructive-zone*` is consumed by
+// `WorkspaceSettings.vue` (Task A5.8, "delete workspace") — the Stage A5
+// temporary-contract marker that used to guard it as a not-yet-dead class is
+// removed now that it has a real consumer.
+
+.tr-form {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+}
+
+// Destructive zone: a visually separated section for irreversible actions
+// (delete, revoke, deactivate) at the bottom of a form. Border/accent only —
+// the action itself keeps whatever confirmation flow it already has.
+.tr-destructive-zone {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+  padding: tr.$space-4;
+  border: 1px solid var(--tr-danger);
+  border-radius: tr.$radius;
+}
+
+.tr-destructive-zone__title {
+  margin: 0;
+  color: var(--tr-danger);
+  font-weight: tr.$font-weight-semibold;
+}
+
+// Save/cancel footer. Buttons stay Bulma .button.is-primary/.button — this
+// class only owns the row layout, mirroring .tr-page-toolbar's wrap-on-narrow
+// behavior.
+.tr-form__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: tr.$space-4;
+  margin-top: auto;
+}
+
+// Keyboard-reachable error summary (Task A10.1, `common/FormErrorSummary.vue`):
+// each field error is a real `<button>` inside the `b-message` so it is
+// tab-reachable and jumps focus to the offending field on activation. Layout
+// only — `b-message`/`.message` already carries the `is-danger` color/border.
+.tr-form-error-summary__title {
+  margin: 0 0 tr.$space-2;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-form-error-summary__list {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tr-form-error-summary__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tr-form-error-summary__link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+// b-upload's drag-drop zone (Task A5.6, `knowledge/Files.vue`): Buefy ships
+// the border/hover states for `.upload.is-drag-drop` itself, this only adds
+// the spacing this screen needs around and inside it.
+.tr-knowledge-files__upload {
+  margin: tr.$space-4 0;
+}
+
+.tr-upload-dropzone__hint {
+  padding: tr.$space-6;
+}
+
+// `ModelSelect.vue` (Task A6.2): a `b-autocomplete` wrapper for the catalog
+// model picker. `.tr-model-select__option` lays out the provider icon and
+// name inside the default result slot; `.tr-model-select__freeform-*` is the
+// BYOK "use as identifier" fallback rendered in the `empty` slot. The
+// dropdown chrome itself (`.dropdown-content`, `.dropdown-item`) is already
+// covered by the autocomplete selectors in sections 7-8 and by
+// `.dropdown-item` in section 10 — these rules only add what is specific to
+// this field.
+.tr-model-select {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-model-select__option {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-model-select__option-name {
+  overflow-wrap: anywhere;
+}
+
+.tr-model-select__hint {
+  margin: 0;
+}
+
+.tr-model-select__empty {
+  margin: 0;
+  padding: 6px tr.$space-3;
+  color: var(--tr-text-muted);
+}
+
+.tr-model-select__freeform {
+  display: flex;
+  flex-direction: column;
+}
+
+.tr-model-select__freeform-action {
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+  border: 0;
+  cursor: pointer;
+}
+
+.tr-model-select__freeform-action:disabled {
+  color: var(--tr-text-muted);
+  cursor: not-allowed;
+}
+
+.tr-model-select__freeform-hint {
+  margin: 0;
+  padding: 0 tr.$space-3;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+// `ApiKeySelect.vue` (Stage A6 fix, post-review): a `b-dropdown` listing the
+// workspace's saved OpenRouter keys plus an "Добавить ключ…" item that opens
+// the add-key `b-modal`. The trigger mirrors `.tr-toolbar-dropdown__trigger`
+// (same button chrome) but lives in a form field, not a toolbar, hence its
+// own class instead of reusing that one.
+.tr-api-key-select__trigger.button {
+  width: 100%;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+  padding-inline: tr.$space-3;
+  font-size: tr.$font-size-base;
+  font-weight: tr.$font-weight-normal;
+}
+
+.tr-api-key-select__trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-api-key-select__add {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  cursor: pointer;
+  color: var(--tr-primary);
+}
+
+// Task A10.2: per-key delete affordance inside the saved-key list — a
+// separate instant command from picking the key, so it never fires the
+// dropdown-item's own select handler (see `ApiKeySelect.vue`'s `@click.stop`).
+.tr-api-key-select__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+  width: 100%;
+}
+
+.tr-api-key-select__item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-api-key-select__item-delete {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--tr-text-muted);
+}
+
+.tr-api-key-select__item-delete:hover,
+.tr-api-key-select__item-delete:focus-visible {
+  color: var(--tr-danger);
+}
+
+// Task A10.2: instant "detach key from agent" action in `AgentSettings.vue`
+// — visually separate from the model/key draft's own Save button, since it
+// applies immediately and never touches the draft/save transaction above it.
+.tr-agent-settings__detach {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-3;
+  margin-top: tr.$space-3;
+  padding-top: tr.$space-3;
+  border-top: 1px solid var(--tr-border);
+}
+
+.tr-agent-settings__detach-hint {
+  margin: 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+// Stage A10 review fix: status is a set of instant lifecycle actions (a
+// current-state tag plus buttons for the other transitions), not a form
+// control — laid out as a wrapping row so it degrades to stacked buttons on
+// narrow widths instead of overflowing.
+.tr-agent-settings__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+// =============================================================================
+// 8. Cards and catalogs
+// =============================================================================
+
+.tr-card,
+.box,
+.card,
+.modal-card,
+.dropdown-content,
+.autocomplete .dropdown-content,
+.datepicker .dropdown-content,
+.timepicker .dropdown-content {
+  background: var(--tr-surface-1);
+  color: var(--tr-text);
+  border-color: var(--tr-border);
+  box-shadow: var(--tr-shadow);
+}
+
+.tr-card {
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  padding: tr.$space-5;
+}
+
+.tr-card__title {
+  margin: 0 0 tr.$space-4;
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-md;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-icon-tile {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border: 1px solid var(--tr-primary-border);
+  border-radius: tr.$radius;
+}
+
+.tr-icon-tile--plain {
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+}
+
+.tr-card--interactive {
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tr-card--interactive:hover {
+  border-color: var(--tr-primary);
+  transform: translateY(-2px);
+}
+
+.tr-card--interactive:focus-visible {
+  outline: 3px solid rgb(142 100 206 / 0.24);
+  outline-offset: 2px;
+}
+
+.tr-catalog {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.tr-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+.tr-catalog-empty {
+  grid-column: 1 / -1;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 1.25rem;
+  color: var(--tr-text-muted);
+  text-align: center;
+}
+
+.tr-entity-card {
+  min-width: 0;
+  min-height: 220px;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tr-entity-card--interactive {
+  color: var(--tr-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.tr-entity-card__header,
+.tr-entity-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tr-entity-card__icon {
+  width: 44px;
+  height: 44px;
+}
+
+.tr-entity-card__create-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.tr-entity-card__title {
+  overflow: hidden;
+  color: var(--tr-text-strong);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-entity-card__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--tr-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.tr-entity-card__footer {
+  min-height: 32px;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  color: var(--tr-text-muted);
+  border-top: 1px solid var(--tr-divider);
+  font-size: 0.75rem;
+}
+
+.tr-entity-card__connected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--tr-primary);
+  font-weight: 600;
+}
+
+.tr-entity-card--create {
+  align-items: center;
+  justify-content: center;
+  color: var(--tr-text-muted);
+  text-align: center;
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.tr-entity-card--create strong {
+  color: var(--tr-text-strong);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.tr-entity-card--create > span:last-child {
+  max-width: 280px;
+}
+
+.tr-dashboard-create {
+  min-height: min(520px, calc(100vh - 160px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--tr-text-muted);
+  text-align: center;
+  text-decoration: none;
+}
+
+.tr-dashboard-create strong {
+  color: var(--tr-text-strong);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.tr-dashboard-create > span:last-child {
+  max-width: 420px;
+}
+
+.tr-dashboard-create__icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0.5rem;
+}
+
+.tr-dashboard-link {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  min-height: 184px;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.tr-dashboard-link__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tr-dashboard-link__metric {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.tr-dashboard-link__metric strong {
+  color: var(--tr-text-strong);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  line-height: 1;
+}
+
+.tr-dashboard-link__metric span,
+.tr-dashboard-link__details {
+  color: var(--tr-text-muted);
+}
+
+.tr-dashboard-link__details {
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.tr-dashboard-link__details strong,
+.tr-dashboard-link__delta {
+  color: var(--tr-primary);
+  font-weight: 600;
+}
+
+.tr-dashboard-icon {
+  width: 40px;
+  height: 40px;
+}
+
+// "Требует внимания" (Task A10.4): a list of `.tr-card`-based rows, each
+// naming one concrete S2 reason and a specific route/action — deliberately
+// not another grid of `.tr-dashboard-link` tiles, since these rows carry a
+// variable-length message plus a trailing action button instead of a single
+// metric.
+.tr-dashboard-attention__list {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tr-dashboard-attention__item {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-4;
+}
+
+.tr-dashboard-attention__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  color: var(--tr-warning);
+}
+
+.tr-dashboard-attention__body {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.tr-dashboard-attention__action {
+  flex: none;
+}
+
+.tr-knowledge__type-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: tr.$space-3;
+  padding: tr.$space-4;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border: 1px solid var(--tr-primary-border);
+  border-radius: tr.$radius;
+}
+
+.tr-knowledge__type-hint > span {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+}
+
+.tr-knowledge__type-hint strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-knowledge__type-hint small {
+  color: var(--tr-text-muted);
+}
+
+// Statistics tab stat tiles (`knowledge/Statistics.vue`, Task A5.6) — same
+// label-over-big-value shape as `.tr-dashboard-link__metric`, kept as its own
+// class because that one's name and section are Dashboard-specific.
+.tr-knowledge-stats__value {
+  display: block;
+  margin-top: tr.$space-1;
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-xl;
+  font-weight: tr.$font-weight-semibold;
+}
+
+// Channels (agent-scoped catalog nested under `/agents/:id/channels`,
+// Task A5.5): identity suffix (`@bot_username`) next to the card title, a
+// footer variant for the channel card's variable action count (activate/
+// deactivate/edit/delete/retake/replace-token/open-bot, unlike the shared
+// two-item `.tr-entity-card__footer` default), and the inline limits panel
+// nested in every card.
+.tr-entity-card__identity {
+  margin-left: tr.$space-2;
+  color: var(--tr-text-muted);
+  font-size: 0.75rem;
+  font-weight: tr.$font-weight-normal;
+}
+
+.tr-entity-card__footer--wrap {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.tr-channel-limits {
+  margin-top: tr.$space-3;
+  padding-top: tr.$space-3;
+  border-top: 1px solid var(--tr-divider);
+}
+
+.tr-channel-limits__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+}
+
+.tr-channel-limits__title {
+  margin: 0;
+  color: var(--tr-text-strong);
+  font-size: 0.8125rem;
+  font-weight: tr.$font-weight-medium;
+}
+
+// =============================================================================
+// 9. States
+// =============================================================================
+
+.notification,
+.message {
+  border: 1px solid var(--tr-border);
+  box-shadow: none;
+}
+
+.notification:not(.is-primary):not(.is-success):not(.is-info):not(.is-warning):not(.is-danger) {
+  color: var(--tr-text);
+  background: var(--tr-surface-2);
+}
+
+.message-header {
+  color: var(--tr-text-strong);
+}
+
+.message-body {
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+  border-color: var(--tr-border);
+}
+
+.tag:not(body) {
+  color: var(--tr-text);
+  background: var(--tr-surface-3);
+}
+
+.tag:not(body).is-primary {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+}
+
+.progress {
+  background: var(--tr-surface-3);
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--tr-surface-3);
+}
+
+.progress.is-primary::-webkit-progress-value {
+  background: var(--tr-primary);
+}
+
+.progress.is-primary::-moz-progress-bar {
+  background: var(--tr-primary);
+}
+
+// .tr-section-empty is a pure sizing wrapper for the "whole page/section is
+// empty" layout (full available height, single centered child). Content
+// styling (icon/title/message) belongs to the .tr-async-state block it
+// wraps — see below — not to this selector.
+.tr-section-empty {
+  min-height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-12});
+  display: flex;
+}
+
+// Single content block for every async/empty state in the Kit: loading,
+// empty, no-results, error, permission-denied — the only five modifiers
+// this block is limited to (Task A3.7). Presentation-only: data fetching
+// and permission decisions stay with the caller. Wrapped by
+// AsyncState.vue/ListAsyncState.vue with the same class contract (Task
+// A4.4) — role="alert"/aria-live="assertive" for --error and
+// role="status"/aria-live="polite" for the rest are set by AsyncState.vue
+// itself, not by this stylesheet.
+//
+// - --loading has no dedicated styling: AsyncState.vue places <Loader>
+//   inside, .tr-async-state only centers it. No manual spinner is drawn
+//   here.
+// - --error colors the icon with the danger token.
+// - --empty, --no-results, --permission-denied share the same neutral
+//   presentation and differ only in icon/copy supplied by the caller.
+.tr-async-state {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: tr.$space-2;
+  padding: tr.$space-8 tr.$space-4;
+  color: var(--tr-text-muted);
+  text-align: center;
+}
+
+.tr-async-state__icon {
+  display: flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  margin-bottom: tr.$space-2;
+  color: var(--tr-text-subtle);
+  text-align: center;
+}
+
+.tr-async-state__icon .mdi {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.tr-async-state--error .tr-async-state__icon {
+  color: var(--tr-danger);
+}
+
+.tr-async-state__title {
+  margin: 0;
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-async-state__message {
+  width: 100%;
+  max-width: 360px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.tr-async-state__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tr.$space-3;
+  margin-top: tr.$space-2;
+}
+
+// SkeletonLoader.vue foundation (get.3xtr.im component, no kit equivalent —
+// Stage A4 decided b-skeleton covers the kit, see docs/design-system.md
+// "Допустимые исключения"): a full-block loading placeholder made of
+// .tr-skeleton-block rows.
+.skeleton-loader {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+  padding: tr.$space-4;
+}
+
+.skeleton-loader__row {
+  height: 3.5rem;
+}
+
+.skeleton-loader__row--head {
+  height: 2.5rem;
+}
+
+// ProgressBar.vue foundation (get.3xtr.im component, no kit equivalent —
+// Stage A4 decided b-progress covers the kit, see docs/design-system.md
+// "Допустимые исключения"): a two-layer bar (track + filled overlay clipped
+// to `position`%). Consumers may override colors via the
+// --progress-bar-*-color custom properties.
+.progress-bar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  border-radius: tr.$radius-large;
+  overflow: hidden;
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--progress-bar-color, var(--tr-text));
+  background-color: var(--progress-bar-bg-color, var(--tr-surface-3));
+  font-size: 11px;
+  font-weight: tr.$font-weight-medium;
+}
+
+.progress-bar__content {
+  padding: 0 10px;
+}
+
+.progress-bar--over {
+  color: var(--progress-bar-over-color, var(--tr-text-strong));
+  background-color: var(--progress-bar-over-bg-color, var(--tr-primary));
+  overflow: hidden;
+  transition: width 0.25s ease;
+}
+
+// =============================================================================
+// 10. Overlays
+// =============================================================================
+
+.dropdown-content {
+  min-width: 300px;
+  // Caps the menu's width regardless of how long an item's label is (a
+  // dropdown-item's text used to force `.dropdown-content` to grow to fit
+  // it on one line, overflowing past the trigger and, at narrow widths,
+  // past the viewport — first spotted on the conversations agent filter,
+  // but nothing here is specific to it, so the fix is generic). `100vw`
+  // minus the page's own side gutter keeps it from overflowing the
+  // viewport on a narrow screen even when the trigger sits near the edge.
+  max-width: min(360px, calc(100vw - #{tr.$space-8}));
+  padding: tr.$space-2;
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+}
+
+.dropdown-item {
+  margin-block: 1px;
+  padding: 6px tr.$space-3;
+  color: var(--tr-text);
+  background-color: transparent;
+  border-radius: tr.$radius;
+  font-size: tr.$font-size-base;
+}
+
+// Truncates a long label with an ellipsis instead of forcing
+// `.dropdown-content` wider than its `max-width` above (Bulma's own default
+// leaves `white-space: nowrap` but no `overflow`/`text-overflow`, so the box
+// just grew instead of clipping). Scoped to `a.dropdown-item`/
+// `button.dropdown-item` — Buefy's `DropdownItem.vue` renders exactly one of
+// these two tags for a plain, single-line clickable item (`ToolbarDropdown`,
+// the workspace list, main-nav items, …) — deliberately not the bare
+// `.dropdown-item` above, which is also the base style for a `custom`
+// dropdown-item (rendered as a plain `div`, e.g. `.tr-dropdown-setting`'s
+// switches/selects, the mobile workspace picker) — those hold real
+// interactive content, not a text label, and must keep flowing/wrapping
+// normally rather than getting clipped. Also re-specified here (not on the
+// bare `.dropdown-item`) because Bulma's own same-tag compound selector
+// otherwise wins the cascade at equal specificity by source order.
+a.dropdown-item,
+button.dropdown-item {
+  padding-inline-end: tr.$space-3;
+  background-color: transparent;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dropdown-item.is-active {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+}
+
+.dropdown-item.is-active strong,
+.dropdown-item.is-active small {
+  color: inherit;
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: tr.$space-2 0;
+  background: var(--tr-divider);
+  border: 0;
+}
+
+.dropdown + .dropdown {
+  margin: 0;
+}
+
+.tr-dropdown-intro {
+  max-width: 260px;
+  margin: 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  line-height: 1.45;
+}
+
+.tr-notifications-dropdown .dropdown-content {
+  width: min(340px, calc(100vw - #{tr.$space-8}));
+}
+
+.tr-notifications-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-4;
+}
+
+.tr-notifications-heading strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-notifications-heading span {
+  color: var(--tr-primary);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: tr.$space-3;
+  width: 100%;
+}
+
+.tr-notification__marker {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  margin-top: 7px;
+  background: var(--tr-primary);
+  border-radius: tr.$radius-rounded;
+}
+
+.tr-notification__marker.is-read {
+  background: var(--tr-text-subtle);
+  opacity: 0.5;
+}
+
+.tr-notification__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: normal;
+}
+
+.tr-notification__copy strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-notification__copy small {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  line-height: 1.4;
+}
+
+.tr-notification__copy time {
+  margin-top: 2px;
+  color: var(--tr-text-subtle);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-notifications-all {
+  display: block;
+  width: 100%;
+  color: var(--tr-primary);
+  text-align: center;
+}
+
+.tr-dropdown-item-row,
+.tr-dropdown-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-4;
+  width: 100%;
+}
+
+.tr-dropdown-item-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+}
+
+.tr-dropdown-item-copy strong {
+  overflow: hidden;
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-dropdown-item-copy small {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-dropdown-item-row > .tag {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.tr-dropdown-action {
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-dropdown-setting {
+  min-height: 32px;
+}
+
+.tr-dropdown-setting .select select {
+  min-width: 112px;
+}
+
+.tr-dropdown-danger,
+.tr-dropdown-danger .icon {
+  color: var(--tr-danger);
+}
+
+a.dropdown-item.tr-dropdown-danger:hover {
+  color: var(--tr-danger);
+  background: color-mix(in srgb, var(--tr-danger) 10%, transparent);
+}
+
+.modal-background {
+  background: var(--tr-overlay);
+}
+
+.modal-card-head,
+.modal-card-foot {
+  background: var(--tr-surface-2);
+  border-color: var(--tr-border);
+}
+
+.modal-card-title {
+  color: var(--tr-text-strong);
+}
+
+.modal-card-body {
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+}
+
+a.dropdown-item:hover,
+button.dropdown-item:hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+}
+
+.tooltip-content {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-3);
+  border: 1px solid var(--tr-border);
+}
+
+// b-toast (via `useToast`/`$buefy.toast.open`) renders into Buefy's own
+// `.notices` container, which ships a literal z-index — align it with the
+// kit's `--tr-z-toast` token instead of leaving that literal as the only
+// source of truth. This is a style hook onto Buefy's own class, not a
+// competing overlay layer.
+.notices {
+  z-index: var(--tr-z-toast);
+}
+
+// Stage A3.8: modal, confirm, side panel and toast overlays are Buefy's own
+// `b-modal`, `b-dialog`, `b-sidebar` and `b-toast` — see
+// docs/design-system.md#собственный-компонент-или-buefy. There is no
+// standalone Modal.vue/ConfirmDialog.vue/Toaster.vue in the kit, so this
+// section carries only style hooks for Buefy's own overlay markup (the
+// `.modal-card-*` rules above, plus `b-sidebar`/`b-dialog` inherit theme
+// tokens from Bulma variables configured in § Tokens); it does not define a
+// competing overlay layer.
+
+.material-icons-outlined {
+  font-size: tr.$font-size-md;
+}
+
+// =============================================================================
+// 11. Tariffs
+// =============================================================================
+
+.tr-sidebar-tariff {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.tr-sidebar-tariff__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 0.375rem;
+  row-gap: 0;
+}
+
+.tr-sidebar-tariff__label {
+  display: flex;
+  align-items: center;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tr-sidebar-tariff__name {
+  margin-left: auto;
+  color: var(--tr-text-strong);
+  font-size: 1.375rem;
+  line-height: 1.2;
+  text-align: end;
+}
+
+.tr-sidebar-tariff__name--accent {
+  color: var(--tr-primary);
+}
+
+.tr-sidebar-tariff__limits {
+  gap: 0;
+}
+
+.tr-sidebar-tariff__limit-label {
+  font-size: tr.$font-size-sm;
+}
+
+.tr-sidebar-tariff__limits .progress-wrapper {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+  margin-bottom: 0.125rem !important;
+}
+
+.tr-sidebar-tariff__caption,
+.tr-tariff-selector__caption {
+  display: block;
+  font-size: tr.$font-size-xs;
+  text-align: end;
+}
+
+.tr-tariff-selector {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+}
+
+.tr-tariff-selector__billing {
+  align-self: center;
+  display: inline-flex;
+  padding: 0.25rem;
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+}
+
+.tr-tariff-selector__billing-option {
+  padding: 0.375rem tr.$space-3;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: calc(#{tr.$radius} - 2px);
+  font: inherit;
+  font-size: tr.$font-size-sm;
+  cursor: pointer;
+}
+
+.tr-tariff-selector__billing-option--active {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-1);
+  box-shadow: var(--tr-shadow);
+}
+
+.tr-tariff-selector__billing-option:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 1px;
+}
+
+.tr-tariff-selector__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: tr.$space-4;
+}
+
+.tr-tariff-selector__card {
+  min-width: 0;
+  min-height: 430px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: tr.$space-5;
+  background: var(--tr-surface-2);
+  text-align: start;
+  transition:
+    border-color tr.$transition-fast,
+    box-shadow tr.$transition-fast,
+    transform tr.$transition-fast;
+}
+
+.tr-tariff-selector__card--current {
+  border-color: var(--tr-tariff-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tr-tariff-color) 18%, transparent);
+}
+
+.tr-tariff-selector__card--disabled {
+  color: var(--tr-text-muted);
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.56;
+}
+
+.tr-tariff-selector__heading {
+  min-height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+}
+
+.tr-tariff-selector__badges {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: tr.$space-2;
+}
+
+.tr-tariff-selector__current {
+  padding: 0.125rem tr.$space-2;
+  color: var(--tr-tariff-color);
+  background: color-mix(in srgb, var(--tr-tariff-color) 12%, transparent);
+  border-radius: tr.$radius-rounded;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-tariff-selector__saving {
+  padding: 0.125rem tr.$space-2;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border-radius: tr.$radius-rounded;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-tariff-selector__name {
+  color: var(--tr-tariff-color);
+  font-size: tr.$font-size-lg;
+  line-height: 1.2;
+}
+
+.tr-tariff-selector__price {
+  color: var(--tr-text);
+  font-size: tr.$font-size-xl;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-tariff-selector__price-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 5rem;
+  margin: tr.$space-4 0;
+  text-align: start;
+}
+
+.tr-tariff-selector__price--regular {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.tr-tariff-selector__action {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem tr.$space-3;
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-1);
+  border: 0;
+  border-radius: tr.$radius;
+  font: inherit;
+  font-weight: tr.$font-weight-semibold;
+  cursor: pointer;
+}
+
+.tr-tariff-selector__action:hover:not(:disabled) {
+  color: var(--tr-text-on-primary);
+  background: var(--tr-primary);
+}
+
+.tr-tariff-selector__action:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 2px;
+}
+
+.tr-tariff-selector__action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tr-tariff-selector__description {
+  min-height: 2.5em;
+  margin-top: tr.$space-3;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+  line-height: 1.4;
+}
+
+.tr-tariff-selector__limits {
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: tr.$space-2;
+  margin-top: tr.$space-5;
+}
+
+.tr-tariff-selector__limit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: tr.$space-3;
+}
+
+.tr-tariff-selector__limit-label {
+  display: block;
+  color: var(--tr-text);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-tariff-selector__conditions {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+  margin: auto 0 0;
+  padding: tr.$space-3 0 0;
+  border-top: 1px solid var(--tr-border-soft);
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+  list-style: none;
+}
+
+.tr-tariff-selector__conditions li {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-tariff-selector__conditions li::before {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: 0 0 auto;
+  content: "✓";
+  color: var(--tr-tariff-color);
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+}
+
+// =============================================================================
+// 12. Conversations
+// =============================================================================
+
+.tr-workbench-page {
+  height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-12});
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+}
+
+.tr-workbench-page__header {
+  flex: 0 0 auto;
+}
+
+.tr-workbench-page > .tr-conversations,
+.tr-workbench-page > .tr-section-empty,
+.tr-workbench-page > .tr-loader {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+// `.tr-conversations`' 3-column list/chat/properties grid: collapsed to 2
+// columns (list + the open dialog, or the "pick a dialog" placeholder when
+// none is selected — see `.tr-conversation-split` further down) by default
+// via `:not(.is-properties-open)` below, expanding to the full 3-column
+// list/chat/properties layout while a dialog's settings pane is open. The
+// kit's own `Conversations.vue` toggles this exact class through
+// `conversationPropertiesKey` (see `src/composables/conversationProperties.js`)
+// — `conversations/ConversationDetail.vue`'s gear button opens/closes the
+// pane without a route, unlike get.3xtr.im's still-unported conversation
+// view (`conversations/views/Conversations.vue`), which toggles the same
+// class but keeps settings as a `/settings` route (see
+// `docs/agent-migration-guide.md` section 6 for the two mechanisms).
+.tr-conversations {
+  --tr-conversation-main-column: 66.6667%;
+
+  height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-12});
+  min-height: 560px;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 2fr)
+    minmax(0, 1fr);
+  gap: tr.$layout-column-gap;
+}
+
+.tr-conversations:not(.is-properties-open) {
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, var(--tr-conversation-main-column));
+}
+
+.tr-conversations:not(.is-properties-open) .tr-conversation-properties {
+  display: none;
+}
+
+.tr-conversations:not(.is-properties-open) .tr-conversations-placeholder {
+  grid-column: span 1;
+}
+
+// .tr-conversation-panel is the shared "workbench column" box style: it
+// decorates the conversations list panel (.tr-conversations-list) as well
+// as the reusable single-conversation chat/properties widget
+// (.tr-conversation-chat / .tr-conversation-properties) that Agents.vue
+// reuses verbatim for its agent sandbox — see docs/agent-migration-guide.md
+// section 6.
+.tr-conversation-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  box-shadow: var(--tr-shadow);
+}
+
+.tr-conversations-placeholder {
+  min-width: 0;
+  min-height: 0;
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: tr.$space-2;
+  padding: tr.$space-6;
+  color: var(--tr-text-muted);
+  text-align: center;
+}
+
+.tr-conversations-placeholder .icon {
+  margin-bottom: tr.$space-2;
+  color: var(--tr-text-subtle);
+}
+
+.tr-conversations-placeholder strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-conversations-placeholder span {
+  max-width: 320px;
+}
+
+.tr-conversations-placeholder > *,
+.tr-section-empty > .tr-async-state {
+  transform: translateY(-12vh);
+  transform: translateY(-12dvh);
+}
+
+.tr-conversation-header {
+  height: tr.$topbar-height;
+  min-height: tr.$topbar-height;
+  display: flex;
+  align-items: center;
+  gap: tr.$space-3;
+  flex: 0 0 auto;
+  padding: 11px tr.$space-4;
+  border-bottom: 1px solid var(--tr-divider);
+}
+
+.tr-conversation-title {
+  margin: 0 auto 0 0;
+  color: var(--tr-text-strong);
+  font-size: tr.$font-size-md;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-conversations-list__items,
+.tr-conversation-messages,
+.tr-conversation-properties-body {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tr-conversations-list__items {
+  padding: tr.$space-2;
+}
+
+.tr-conversation-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: tr.$space-3;
+  margin: 1px 0;
+  padding: tr.$space-3;
+  color: var(--tr-text);
+  font: inherit;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-radius: tr.$radius;
+  cursor: pointer;
+  transition:
+    color tr.$transition-fast,
+    background-color tr.$transition-fast;
+}
+
+.tr-conversation-item:hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+}
+
+// The kit's own `Conversations.vue` list sets `is-active` again as of Task
+// A8.4 — the open dialog is now derived straight from `route.params.conversationId`
+// rather than tracked in the list's own state, but it renders the same way;
+// get.3xtr.im's still-unported conversation list view also toggles this
+// exact class on the synced stylesheet.
+.tr-conversation-item.is-active {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+}
+
+.tr-conversation-avatar {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border: 1px solid var(--tr-primary-border);
+  border-radius: tr.$radius-rounded;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-conversation-item__content {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: tr.$space-1;
+}
+
+.tr-conversation-item__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: tr.$space-2;
+}
+
+.tr-conversation-item__heading strong {
+  overflow: hidden;
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-conversation-item__heading small,
+.tr-conversation-item__channel,
+.tr-chat-message small {
+  flex: 0 0 auto;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-conversation-item__preview {
+  overflow: hidden;
+  color: var(--tr-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-conversation-item__channel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-conversation-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  margin-right: auto;
+}
+
+.tr-conversation-identity .tr-conversation-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.tr-conversation-identity > span:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+  text-align: start;
+  line-height: 1;
+}
+
+.tr-conversation-identity strong {
+  overflow: hidden;
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-conversation-identity small {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-conversation-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: tr.$space-3;
+  padding: tr.$space-6;
+  background: var(--tr-surface-2);
+}
+
+.tr-chat-message {
+  max-width: 76%;
+  align-self: flex-start;
+  padding: tr.$space-2 tr.$space-3;
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.tr-chat-message.is-outgoing {
+  align-self: flex-end;
+  background: var(--tr-primary-soft);
+  border-color: var(--tr-primary-border);
+}
+
+.tr-chat-message p {
+  margin: 0 0 tr.$space-1;
+  white-space: pre-wrap;
+}
+
+.tr-chat-message small {
+  display: block;
+  text-align: end;
+}
+
+// Delivery-status badge (Task A5.7, conversations/MessageDeliveryStatus.vue)
+// sits inside a message's `<small>` timestamp line, right next to it.
+.tr-message-delivery {
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-1;
+  margin-inline-start: tr.$space-1;
+  vertical-align: middle;
+}
+
+.tr-message-delivery.is-failed {
+  color: var(--tr-danger);
+}
+
+.tr-message-delivery.is-read {
+  color: var(--tr-primary);
+}
+
+.tr-message-delivery__retry {
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: 0;
+  font-size: tr.$font-size-xs;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+// Send-conflict banner (Task A10.5, conversations/History.vue): a plain
+// `b-message` (same `is-warning` contract as the `demoStore.isPartial`
+// banners elsewhere in this file) shown above the composer when
+// `sendMessage` refuses to push the draft because the dialog is escalated
+// and owned by a different operator — only spacing is custom here, color
+// comes from `.message.is-warning` itself. The draft stays in
+// `tr-conversation-composer-input`, untouched.
+.tr-conversation-handoff-conflict {
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--tr-divider);
+}
+
+.tr-conversation-composer {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  flex: 0 0 auto;
+  padding: tr.$space-3;
+  border-top: 1px solid var(--tr-divider);
+}
+
+.tr-conversation-composer-input {
+  min-width: 0;
+  flex: 1;
+}
+
+// `.tr-conversation-properties-body` wraps the settings pane's content in
+// `conversations/ConversationDetail.vue`'s own properties aside (this
+// message's fix) — a plain `.tr-form` (`conversations/Settings.vue`), not
+// the avatar/profile block below. `.tr-conversation-profile`/
+// `-profile-image` stay defined solely as `@extend` targets for
+// get.3xtr.im's still-unported BEM aliases (`.tr-conversations__profile`/
+// `__profile-image`, Section 15 "Deprecated aliases") — its own conversation
+// properties aside still renders an avatar block under those old class
+// names, and this repo's synced stylesheet must keep it styled until that
+// view is ported (a coordinated follow-up, not this task).
+.tr-conversation-properties-body {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-5;
+  padding: tr.$space-5;
+}
+
+.tr-conversation-profile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: tr.$space-2;
+  text-align: center;
+}
+
+.tr-conversation-profile-image {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  margin-bottom: tr.$space-2;
+  object-fit: cover;
+  border-radius: tr.$radius-large;
+}
+
+.tr-conversation-profile strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-agents .tr-conversation-avatar .icon {
+  color: inherit;
+}
+
+// Agent sandbox (Task A5.4, AgentPlayground.vue) has no list column — its
+// gear button (this message's fix) opens a properties aside for the
+// runtime-affecting playground fields (temperature, system prompt) that
+// moved out of `AgentSettings.vue`'s routed tab, which keeps only
+// non-runtime agent fields (name/status — see that file's own comment).
+// Collapsed to one full-width column by default (`:not(.is-properties-open)`
+// would otherwise still reserve a list column, which this page never has),
+// expanding to chat + properties (no list) while the aside is open. The
+// compound selector (vs. a bare `.tr-agents__workbench`) keeps specificity
+// above the `.tr-conversations` narrow-viewport override in Responsive
+// below, which would otherwise win by source order at the same specificity.
+.tr-conversations.tr-agents__workbench {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tr-conversations.tr-agents__workbench.is-properties-open {
+  grid-template-columns:
+    minmax(0, var(--tr-conversation-main-column))
+    minmax(0, 1fr);
+}
+
+.tr-agents__workbench .tr-conversation-list-action {
+  display: inline-flex;
+}
+
+// Conversations page (Task A8.4, Conversations.vue +
+// conversations/ConversationDetail.vue): the open dialog now renders through
+// `Conversations.vue`'s own nested `<RouterView>`, next to the still-visible
+// list, on one persistent grid — unlike `.tr-agents__workbench` above, which
+// never shares its grid with a list column at any width. This class needs no
+// rule at the widths where `.tr-conversations`' own base/`:not(.is-properties-open)`
+// rules already apply (the list+main 2-column grid); it only matters in
+// Responsive below, where it opts the page out of the generic `1279px`
+// collapse other `.tr-conversations` consumers use, keeping list+dialog
+// together down to `1024px` (the shell's own sidebar-collapse breakpoint)
+// before switching to one full-width pane (see Responsive below); its back
+// button (`.tr-conversation-list-action`) stays default-hidden until then.
+
+// `.tr-conversation-detail-body` wraps `ConversationDetail.vue`'s chat pane
+// content (`History.vue`): a flex item below the shell's fixed header that
+// scrolls independently — `History.vue`'s messages/composer pair manages its
+// own internal `flex: 1`/`flex: 0 0 auto` split inside it. The settings pane
+// (`Settings.vue`) is a separate grid column now (`.tr-conversation-properties-body`
+// above), not routed through here.
+.tr-conversation-detail-body {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.tr-conversation-channel-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: tr.$space-2;
+  margin-top: tr.$space-1;
+}
+
+// «Взять диалог»/«Вернуть агенту» (Task A10.5, conversations/ConversationHeader.vue)
+// sit inline with the channel/status/owner tags above — small buttons, no
+// extra chrome beyond what Buefy's `is-small` already gives them.
+.tr-conversation-handoff-action {
+  flex: 0 0 auto;
+}
+
+.tr-agents__sandbox-note {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-2;
+  margin-bottom: tr.$space-2;
+  padding: tr.$space-2 tr.$space-3;
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border-soft);
+  border-radius: tr.$radius-rounded;
+  font-size: tr.$font-size-xs;
+}
+
+.tr-conversation-details {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+  margin: 0;
+}
+
+.tr-conversation-details > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-4;
+}
+
+.tr-conversation-details dt {
+  color: var(--tr-text-muted);
+}
+
+.tr-conversation-details dd {
+  margin: 0;
+  color: var(--tr-text-strong);
+  text-align: end;
+}
+
+// Hidden by default. `.tr-agents__workbench` above always shows the
+// list-action button instead, since that page never has a persistent list
+// column to click "back" into at any width; `.tr-conversation-split`
+// (Responsive below) only shows it below `1024px`, where its list column
+// collapses out of view. The properties-action button (the aside's own
+// "back to chat/history" arrow — both `ConversationDetail.vue`'s and
+// `AgentPlayground.vue`'s asides render only this, no `×`) stays
+// default-hidden the same way — desktop shows chat+properties (and, for
+// conversations, the list) together and settings stay open with nothing to
+// leave; both `.tr-conversation-split` and the generic narrow-viewport
+// block further down (Responsive) show it once a breakpoint collapses the
+// grid to one pane at a time, which is the only way the properties pane
+// ever becomes hidden.
+.tr-conversation-list-action,
+.tr-conversation-properties-action {
+  display: none;
+}
+
+// Settings pane (`conversations/Settings.vue`) reuses the `.tr-form`/
+// `.tr-settings__panel` contract shared with `AgentSettings.vue`/
+// `knowledge/Settings.vue`; capped narrower here since the properties aside
+// column itself is already narrow (`--tr-conversation-main-column`'s
+// complement) — this just keeps a short field stack from stretching
+// edge-to-edge inside it.
+.tr-conversation-settings {
+  max-width: 640px;
+}
+
+// `.tr-conversation-properties-close` (a `×` close button) is not rendered
+// by either kit consumer any more — both `ConversationDetail.vue`'s and
+// `AgentPlayground.vue`'s asides only have the arrow-left above — but the
+// rule stays for get.3xtr.im's still-unported conversation view, whose own
+// properties aside does render one (see the class registry above). The gear
+// button in the chat header (`.tr-conversation-settings-action`) stays
+// visible by default here for the same reason (that view's gear can be
+// toggled independently of a narrow-viewport collapse) — the kit's own two
+// consumers instead only render it conditionally (`v-if="!propertiesOpen"`),
+// so this rule never actually applies to them.
+.tr-conversation-settings-action,
+.tr-conversation-properties-close {
+  display: inline-flex;
+}
+
+.tr-conversation-icon-action.button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  font-size: tr.$font-size-md;
+}
+
+.tr-conversation-icon-action.button .icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+.tr-conversation-icon-action.button .mdi::before {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tr-conversation-icon-action.button:hover {
+  color: var(--tr-text-strong);
+  background: var(--tr-surface-hover);
+  border-color: transparent;
+}
+
+.tr-conversation-icon-action.button:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+}
+
+// Gear button for the settings pane, pressed/`is-active` while it's open.
+// Neither kit consumer (`conversations/ConversationDetail.vue`'s chat header,
+// `agents/AgentPlayground.vue`'s sandbox header) sets this any more — their
+// gear only renders while the pane is *closed* (`v-if="!propertiesOpen"`),
+// so it is never simultaneously visible and active — kept for get.3xtr.im's
+// still-unported conversation view, whose gear stays visible and toggles
+// `is-active` against its own `isSettingsTab`.
+.tr-conversation-settings-action.is-active {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+}
+
+// =============================================================================
+// 13. Utilities
+// =============================================================================
+
+.tr-grid {
+  display: grid;
+  gap: tr.$space-4 tr.$layout-column-gap;
+}
+
+.tr-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tr-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+}
+
+.tr-row {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-3;
+}
+
+.tr-row--between {
+  justify-content: space-between;
+}
+
+.tr-row--center {
+  justify-content: center;
+}
+
+// `.tr-agent-knowledge__header`/`.tr-agent-knowledge__collection-actions`
+// (Task A10.3) — the agent detail "Знания" tab's title+summary/action-buttons
+// header (`components/agents/AgentKnowledge.vue`): both need to wrap under
+// `.tr-row`'s plain non-wrapping flex on a narrow screen instead of
+// overflowing (title+summary vs. the button pair, and the two buttons
+// against each other).
+.tr-agent-knowledge__header {
+  flex-wrap: wrap;
+  row-gap: tr.$space-2;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.tr-agent-knowledge__collection-actions {
+  flex-wrap: wrap;
+}
+
+// `.tr-notification-history*` (Task A10.8, `profile/NotificationHistory.vue`):
+// the route-backed all/unread/paginated surface reuses the existing
+// `.tr-notification*` dropdown-item classes (see "Overlays" above) for one
+// entry's own layout — this block only adds the page-level list/target/
+// action wrapping the dropdown never needed.
+.tr-notification-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tr-notification-history__list .tr-notification {
+  align-items: center;
+  padding-block: tr.$space-3;
+  border-bottom: 1px solid var(--tr-divider);
+}
+
+.tr-notification-history__list .tr-notification:last-child {
+  border-bottom: 0;
+}
+
+.tr-notification--unread .tr-notification__copy strong {
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-notification-history__target {
+  font-size: tr.$font-size-xs;
+}
+
+.tr-notification-history__mark-read {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+.tr-notification-history__tabs.tabs {
+  margin-bottom: 0;
+}
+
+// `.tr-help__*` (Task A10.8, `profile/Help.vue`): a static glossary +
+// scenario reference, no fixture/loading states of its own.
+.tr-help__glossary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: tr.$space-4;
+}
+
+.tr-help__glossary-item dt {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+}
+
+.tr-help__glossary-item dd {
+  margin: tr.$space-1 0 0;
+  color: var(--tr-text-muted);
+}
+
+.tr-help__scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.tr-help__scenario {
+  display: flex;
+  align-items: flex-start;
+  gap: tr.$space-3;
+}
+
+.tr-help__scenario p {
+  margin: tr.$space-1 0 0;
+}
+
+// `.tr-workspace-audit__gap` (Task A10.8, `workspace/Audit.vue`): a
+// retention-gap note below the audit table — muted text with a leading
+// info icon, same idea as `.tr-muted` but keeping the icon inline.
+.tr-workspace-audit__gap {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  margin: tr.$space-3 0 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-divider {
+  height: 1px;
+  background: var(--tr-divider);
+}
+
+.tr-muted {
+  color: var(--tr-text-muted);
+}
+
+// UiKit.vue showcase frames: fixed-height preview boxes for the Loader/
+// b-loading demo sections (`/ui-kit`). Height differs per demo; padding,
+// overflow and positioning are shared — kept here instead of inline `style=`
+// so the reference page follows the same single-stylesheet contract as every
+// other kit screen.
+.tr-uikit-demo-frame {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tr-uikit-demo-frame--section {
+  height: 220px;
+}
+
+.tr-uikit-demo-frame--screen {
+  height: 320px;
+}
+
+.tr-uikit-demo-frame--overlay {
+  height: 160px;
+}
+
+.tr-uikit-demo-frame__fill {
+  height: 100%;
+  min-height: 100%;
+}
+
+.tr-uikit-demo-frame__body {
+  padding: tr.$space-4;
+}
+
+.tr-uikit-demo-padded {
+  padding: tr.$space-6;
+}
+
+.tr-settings {
+  width: 100%;
+}
+
+// `.tr-settings__panel-header`/`.tr-settings__option*` — the "list of options
+// with switches" panel, see docs/agent-migration-guide.md, section 8. Task
+// A5.8 moved `WorkspaceSettings.vue` off this pattern onto real
+// workspace-domain content (`.tr-form` + `.tr-destructive-zone`, both still
+// inside `.tr-settings__panel`, which stays in use); Task A5.9's
+// `src/components/profile/Settings.vue` (notification preferences) is now
+// the kit consumer of `.tr-settings__panel-header`/`.tr-settings__option*`.
+// `.tr-settings__header`/`.tr-settings__panel-footer` never found one (the
+// panel there has no page-level `<h1>` header of its own, and each switch
+// applies immediately, without a save footer) and are removed as of Task
+// A5.11, which closes Stage A5 — see docs/design-system.md, "Допустимые
+// исключения из «нет tr-* без потребителя»". A transactional save row on a
+// settings panel should reuse `.tr-form__footer` instead of reintroducing
+// `.tr-settings__panel-footer`.
+.tr-settings__panel-header p {
+  margin: tr.$space-1 0 0;
+  color: var(--tr-text-muted);
+}
+
+.tr-settings__panel {
+  overflow: hidden;
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  box-shadow: var(--tr-shadow);
+}
+
+.tr-settings__panel-header,
+.tr-settings__option,
+// AgentSettings.vue (Task A5.4): a `.tr-form` field stack dropped straight
+// into the panel, without the option-row chrome below — same padding as the
+// other panel sections it can share a panel with.
+.tr-settings__panel > .tr-form {
+  padding: tr.$space-5 tr.$space-6;
+}
+
+.tr-settings__panel-header {
+  border-bottom: 1px solid var(--tr-divider);
+}
+
+.tr-settings__panel-header h2 {
+  margin: 0;
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-semibold;
+  font-size: tr.$font-size-md;
+}
+
+.tr-settings__option {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-6;
+  border-bottom: 1px solid var(--tr-divider);
+}
+
+.tr-settings__option-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-1;
+}
+
+.tr-settings__option-copy strong {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-settings__option-copy small {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-settings__option .switch {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.tr-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: tr.$space-2;
+}
+
+.tr-theme-toggle .switch {
+  margin: 0;
+}
+
+.tr-theme-toggle__icon {
+  color: var(--tr-primary);
+}
+
+// CopyPre.vue (src/components/common/CopyPre.vue, Task A4.2): a <pre> block
+// with a floating copy button pinned to its top-right corner.
+.copy-pre {
+  position: relative;
+}
+
+.copy-pre__button {
+  position: absolute;
+  top: tr.$space-2;
+  right: tr.$space-6;
+  z-index: calc(var(--tr-z-content) + 1);
+  min-width: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0 0.35rem 0.7rem;
+  line-height: 1;
+  border-color: var(--tr-border);
+  background: var(--tr-surface-2);
+  box-shadow: var(--tr-shadow);
+}
+
+.copy-pre__button .icon {
+  flex-shrink: 0;
+}
+
+.copy-pre__pre {
+  max-height: 520px;
+  margin: 0;
+  padding: tr.$space-3;
+  overflow: auto;
+  color: var(--tr-text);
+  background: var(--tr-input-bg);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-small;
+  font-size: tr.$font-size-xs;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// Auth (Task A5.10): `AuthPage.vue` container and its `LoginView`/
+// `SignupView`/`ForgotView`/`VerifyView`/`InviteView` consumers
+// (`src/components/auth/**`). Replaces the cabinet's dead `auth-page`/
+// `auth-form-container` classes (get.3xtr.im/src/modules/auth/components/
+// AuthPage.vue, `<style scoped>`) with tr-namespaced rules living in this
+// single stylesheet, per the "Styling rule" in CLAUDE.md. `.tr-auth__card`
+// composes with `.tr-card` for the surface/border/shadow — it only adds
+// centering-card sizing on top.
+.tr-auth {
+  display: flex;
+  min-height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-12});
+  align-items: center;
+  justify-content: center;
+  padding: tr.$space-6;
+}
+
+.tr-auth__card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-auth__legal {
+  margin: tr.$space-4 0 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  text-align: center;
+}
+
+.tr-auth__link {
+  color: var(--tr-primary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.tr-auth__link:hover {
+  color: var(--tr-primary-hover);
+}
+
+.tr-auth__footer {
+  display: flex;
+  justify-content: center;
+  gap: tr.$space-2;
+  margin: 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+// "или" divider between the credentials form and GoogleButton.vue.
+.tr-auth__divider {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-3;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-auth__divider::before,
+.tr-auth__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--tr-divider);
+}
+
+// GoogleButton.vue: disabled decorative button, icon + label centered.
+.tr-auth__google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: tr.$space-2;
+}
+
+// WorkspaceSelector.vue: full-screen picker overlay shown by `LoginView.vue`
+// after a fixture login — same overlay contract (`--tr-overlay`,
+// `--tr-z-modal`) as `b-modal`, kept as plain markup here because the
+// cabinet's own `WorkspaceSelector.vue` is not a Buefy `b-modal` either.
+.tr-workspace-picker {
+  position: fixed;
+  inset: 0;
+  z-index: var(--tr-z-modal);
+  display: grid;
+  place-items: center;
+  padding: tr.$space-6;
+  background: var(--tr-overlay);
+}
+
+.tr-workspace-picker__card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-4;
+}
+
+.tr-workspace-picker__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: tr.$space-2;
+  text-align: center;
+}
+
+.tr-workspace-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-workspace-picker__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-3;
+  padding: tr.$space-3 tr.$space-4;
+  color: var(--tr-text);
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.tr-workspace-picker__item:hover {
+  border-color: var(--tr-primary);
+  color: var(--tr-primary);
+}
+
+.tr-workspace-picker__item-role {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+// -----------------------------------------------------------------------------
+// Демо-панель навбара (Task A7.2) — kit-only, не является продуктовым
+// контрактом: эти правила не переносятся в get.3xtr.im (см. "Downstream
+// sync" в CLAUDE.md) и не имеют аналога в `docs/design-system.md`'s
+// "Application shell" contract. Изолированы явным префиксом `tr-demo-panel*`.
+// -----------------------------------------------------------------------------
+
+.tr-demo-panel-trigger {
+  min-height: 36px;
+  height: 36px;
+  padding-block: 2px;
+  padding-inline: tr.$space-3;
+  font-size: tr.$font-size-base;
+  background: var(--tr-input-bg);
+  border-color: var(--tr-border);
+}
+
+.tr-demo-panel-trigger:hover {
+  background: var(--tr-input-bg);
+  border-color: var(--tr-text-subtle);
+  opacity: 1;
+}
+
+.dropdown.is-active .tr-demo-panel-trigger {
+  background: var(--tr-input-bg);
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
+  opacity: 1;
+}
+
+.tr-demo-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-demo-panel__label {
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-medium;
+}
+
+// =============================================================================
+// 14. Responsive
+// =============================================================================
+
+// Mobile row-stacking: below 768px, .tr-table--stack turns table rows into
+// stacked label/value blocks instead of relying on .tr-table-wrapper
+// horizontal scroll. Markup contract: each `td` needs a `data-label`
+// attribute (rendered via ::before) — `thead` is visually hidden rather than
+// removed, so the table stays screen-reader accessible.
+@media (max-width: 767px) {
+  .tr-table--stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .tr-table--stack tbody,
+  .tr-table--stack tr {
+    display: block;
+    width: 100%;
+  }
+
+  .tr-table--stack tr {
+    margin-bottom: tr.$space-3;
+    border: 1px solid var(--tr-border);
+    border-radius: tr.$radius;
+  }
+
+  // `td` is the base case (markup contract: each `td` needs a `data-label`
+  // attribute). `th:not([colspan])` covers a row's identifying cell when
+  // markup uses a semantic `<th scope="row">` instead of `<td>` — same
+  // stacking treatment as `td`, so a table isn't forced to trade row-header
+  // semantics for the mobile layout.
+  .tr-table--stack td,
+  .tr-table--stack th:not([colspan]) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: tr.$space-3;
+    text-align: end;
+    border: none;
+    border-bottom: 1px solid var(--tr-border);
+  }
+
+  .tr-table--stack td::before,
+  .tr-table--stack th:not([colspan])::before {
+    content: attr(data-label);
+    color: var(--tr-text-strong);
+    font-weight: tr.$font-weight-medium;
+    text-align: start;
+  }
+
+  .tr-table--stack td:last-child,
+  .tr-table--stack th:not([colspan]):last-child {
+    border-bottom: none;
+  }
+
+  // A purely decorative cell (an icon that duplicates a value already shown
+  // as text elsewhere in the row) has no independent label/value pair — mark
+  // it .is-decorative to suppress the empty data-label prefix.
+  .tr-table--stack td.is-decorative::before,
+  .tr-table--stack th.is-decorative::before {
+    content: none;
+  }
+
+  // An expandable/aggregate row (a single colspan cell holding a form, or a
+  // tfoot pagination row) has no single label/value pair to stack.
+  .tr-table--stack tfoot th,
+  .tr-table--stack td[colspan],
+  .tr-table--stack th[colspan] {
+    display: block;
+    justify-content: initial;
+    text-align: start;
+    border-bottom: none;
+  }
+
+  .tr-table--stack td[colspan]::before,
+  .tr-table--stack th[colspan]::before {
+    content: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tr-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tr-dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .tr-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-entity-card {
+    min-height: 200px;
+  }
+
+  .tr-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-dashboard-attention__item {
+    flex-wrap: wrap;
+  }
+
+  .tr-dashboard-attention__body {
+    flex: 1 1 100%;
+    margin-right: 0;
+  }
+
+  // `.tr-help__glossary` (Task A10.8): two columns only make sense once
+  // there's width for both a term and its description side by side.
+  .tr-help__glossary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1279px) {
+  .tr-conversations {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, var(--tr-conversation-main-column));
+  }
+
+  .tr-conversation-panel {
+    display: none;
+  }
+
+  .tr-conversations-placeholder {
+    grid-column: span 1;
+    display: flex;
+  }
+
+  .tr-conversations.is-list-view .tr-conversations-list,
+  .tr-conversations.is-list-view .tr-conversation-chat,
+  .tr-conversations.is-chat-view .tr-conversations-list,
+  .tr-conversations.is-chat-view .tr-conversation-chat,
+  .tr-conversations.is-properties-view .tr-conversation-chat,
+  .tr-conversations.is-properties-view .tr-conversation-properties {
+    display: flex;
+  }
+
+  .tr-conversations.is-properties-view {
+    grid-template-columns:
+      minmax(0, var(--tr-conversation-main-column))
+      minmax(0, 1fr);
+  }
+
+  .tr-conversation-properties-action {
+    display: inline-flex;
+  }
+
+  .tr-conversations.is-properties-view .tr-conversation-list-action {
+    display: inline-flex;
+  }
+
+  .tr-conversations.is-properties-view .tr-conversation-properties-action {
+    display: none;
+  }
+}
+
+@media (max-width: 1279px) {
+  .tr-topbar__links {
+    display: none;
+  }
+
+  .tr-topbar__actions {
+    margin-inline-start: auto;
+  }
+
+  .tr-user-resource,
+  .tr-user-resource-separator {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    display: block !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .tr-navbar-tabs {
+    flex: 1 1 auto;
+    margin-inline-start: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tr-navbar-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tr-topbar:has(.tr-navbar-tabs) .tr-search-field--navbar {
+    display: none;
+  }
+
+  .tr-app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tr-brand {
+    width: auto;
+  }
+
+  .tr-topbar > .tr-brand,
+  .tr-demo-panel,
+  .tr-workspace-dropdown,
+  .tr-notifications-dropdown,
+  .tr-user-summary {
+    display: none;
+  }
+
+  .tr-mobile-menu-header .tr-user-summary {
+    display: flex;
+  }
+
+  .tr-mobile-nav {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .tr-mobile-nav.dropdown.is-mobile-modal > .dropdown-menu,
+  .tr-user-dropdown.dropdown.is-mobile-modal > .dropdown-menu {
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    position: fixed !important;
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    inset: 0 !important;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    padding: 0;
+    transform: none;
+    overflow: hidden;
+  }
+
+  .tr-mobile-nav.dropdown.is-mobile-modal > .dropdown-menu > .dropdown-content,
+  .tr-user-dropdown.dropdown.is-mobile-modal > .dropdown-menu > .dropdown-content {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    max-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-right: tr.$space-4;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: tr.$space-4;
+    background: var(--tr-surface-1);
+    border: 0;
+    border-radius: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .tr-mobile-menu-header {
+    position: sticky;
+    z-index: calc(var(--tr-z-content) + 2);
+    top: calc(-1 * env(safe-area-inset-top));
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    display: block !important;
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    margin: 0 calc(-1 * #{tr.$space-4}) tr.$space-2 !important;
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    padding: tr.$space-3 tr.$space-4 !important;
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    background: var(--tr-surface-1) !important;
+    border-bottom: 1px solid var(--tr-border-soft);
+  // stylelint-disable-next-line declaration-no-important -- Stage A3 debt: overrides Bulma/Buefy base specificity, tracked for buefy-first cleanup.
+    border-radius: 0 !important;
+  }
+
+  .tr-search-field--navbar {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    margin-inline-start: 0;
+  }
+
+  .tr-user-trigger {
+    width: 36px;
+    min-height: 36px;
+    height: 36px;
+    justify-content: center;
+    padding: 0;
+    border-radius: tr.$radius-rounded;
+  }
+
+  .tr-sidebar {
+    display: none;
+  }
+
+  .tr-grid--2,
+  .tr-grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  // Task A8.4: `Conversations.vue`'s persistent list+dialog split collapses
+  // to one full-width pane here — the same breakpoint the Sidebar itself
+  // collapses at above, rather than the generic `1279px`/`768px` guards
+  // below, which exist for `.tr-agents__workbench`'s narrower embedded
+  // 3-column widget and never share a route with this page. `is-list-view`/
+  // `is-chat-view`/`is-properties-view` pick which single pane shows,
+  // mirroring the mechanism get.3xtr.im's still-unported view already
+  // toggles on the synced stylesheet (see the `768px` block below and
+  // `docs/agent-migration-guide.md` section 6).
+  .tr-conversations.tr-conversation-split {
+    height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-8});
+    display: block;
+  }
+
+  .tr-conversation-split.is-list-view .tr-conversations-list,
+  .tr-conversation-split.is-chat-view .tr-conversation-chat {
+    height: 100%;
+    display: flex;
+  }
+
+  .tr-conversation-split.is-list-view .tr-conversation-chat,
+  .tr-conversation-split.is-chat-view .tr-conversations-list {
+    display: none;
+  }
+
+  // Settings pane (this message's fix): mirrors the list/chat pair above —
+  // `is-properties-view` is entered only from `is-chat-view` (the gear
+  // button lives in the chat header), so only chat/properties need a
+  // visibility swap here; the list stays hidden either way.
+  .tr-conversation-split.is-properties-view .tr-conversation-properties {
+    height: 100%;
+    display: flex;
+  }
+
+  .tr-conversation-split.is-properties-view .tr-conversation-chat {
+    display: none;
+  }
+
+  .tr-conversation-split .tr-conversations-placeholder {
+    display: none;
+  }
+
+  .tr-conversation-split .tr-conversation-list-action,
+  .tr-conversation-split .tr-conversation-properties-action {
+    display: inline-flex;
+  }
+
+  // The aside's own "back to chat" arrow above replaces this close button
+  // once the properties pane is the only visible column — mirrors
+  // `.tr-conversation-list-action` vs `.tr-conversation-settings-action` in
+  // the chat header.
+  .tr-conversation-split.is-properties-view .tr-conversation-properties-close {
+    display: none;
+  }
+
+  .tr-conversation-split.is-list-view .tr-conversation-item.is-active {
+    color: var(--tr-text);
+    background: transparent;
+  }
+
+  .tr-conversation-split.is-list-view .tr-conversation-item.is-active:hover {
+    color: var(--tr-text-strong);
+    background: var(--tr-surface-hover);
+  }
+}
+
+@media (max-width: 768px) {
+  .tr-page,
+  .tr-topbar {
+    padding-right: tr.$space-4;
+    padding-left: tr.$space-4;
+  }
+
+  .tr-workspace-trigger {
+    min-width: 0;
+    max-width: 180px;
+  }
+
+  .tr-search-field .input {
+    padding-inline-end: 0.75em;
+  }
+
+  .tr-search-field__shortcut {
+    display: none;
+  }
+
+  .tr-page-toolbar__search {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .tr-page-toolbar__filter {
+    display: none;
+  }
+
+  // The now-empty .tr-page-toolbar__filters wrapper would otherwise keep
+  // claiming flex: 1 1 auto once its pills are hidden above, stealing half
+  // the row from .tr-page-toolbar__search / .tr-mobile-filters.
+  .tr-page-toolbar__filters {
+    display: none;
+  }
+
+  .tr-mobile-filters {
+    display: block;
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+  }
+
+  .tr-mobile-filters__trigger.button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+
+  .tr-mobile-filters__trigger.button.is-active {
+    color: var(--tr-primary);
+    background: var(--tr-primary-soft);
+    border-color: var(--tr-primary-border);
+  }
+
+  // Filters slot content is ToolbarDropdown pills (full-width via
+  // .tr-toolbar-dropdown__trigger.button), not b-field/b-select — see Task
+  // A4.7 — so this panel has no .field/.label rules to carry.
+  .tr-mobile-filters__content {
+    width: min(280px, calc(100vw - 2rem));
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.25rem;
+  }
+
+  .tr-conversations {
+    height: calc(100vh - #{tr.$topbar-height} - #{tr.$space-8});
+    display: block;
+  }
+
+  .tr-conversations.is-list-view .tr-conversations-list,
+  .tr-conversations.is-chat-view .tr-conversation-chat,
+  .tr-conversations.is-properties-view .tr-conversation-properties {
+    height: 100%;
+    display: flex;
+  }
+
+  .tr-conversations.is-list-view .tr-conversation-chat,
+  .tr-conversations.is-list-view .tr-conversation-properties,
+  .tr-conversations.is-chat-view .tr-conversations-list,
+  .tr-conversations.is-chat-view .tr-conversation-properties,
+  .tr-conversations.is-properties-view .tr-conversations-list,
+  .tr-conversations.is-properties-view .tr-conversation-chat {
+    display: none;
+  }
+
+  .tr-conversations-placeholder {
+    display: none;
+  }
+
+  .tr-conversations.is-list-view .tr-conversation-item.is-active {
+    color: var(--tr-text);
+    background: transparent;
+  }
+
+  .tr-conversations.is-list-view .tr-conversation-item.is-active:hover {
+    color: var(--tr-text-strong);
+    background: var(--tr-surface-hover);
+  }
+
+  .tr-conversation-messages {
+    padding: tr.$space-4;
+  }
+
+  .tr-conversation-header {
+    padding-inline: tr.$space-3;
+  }
+
+  .tr-conversation-list-action {
+    display: inline-flex;
+  }
+
+  .tr-conversations.is-properties-view .tr-conversation-properties-action {
+    display: inline-flex;
+  }
+
+  // The back arrow above replaces this close button once the properties
+  // panel is the only visible column — mirrors .tr-conversation-list-action
+  // vs .tr-conversation-settings-action in the chat header.
+  .tr-conversations.is-properties-view .tr-conversation-properties-close {
+    display: none;
+  }
+
+  .tr-page-header {
+    flex-direction: column;
+  }
+}
+
+// `.tr-wizard-telegram-qr`/`.tr-wizard-telegram-open-mobile` (Task A9.7,
+// section 15 below): T1 shows the QR mock on desktop and swaps to the
+// "Открыть Telegram" mock button below this same 768px cutoff used
+// everywhere else above.
+@media (max-width: 768px) {
+  .tr-wizard-telegram-qr,
+  .tr-wizard-telegram-qr__caption {
+    display: none;
+  }
+
+  .tr-wizard-telegram-open-mobile {
+    display: inline-flex;
+  }
+}
+
+// `.tr-wizard-review-summary__row` (Task A9.8, section 15 below): the
+// "Проверка и запуск" audit's two-column label/value row collapses to one
+// column narrow, same cutoff as the rest of this section.
+@media (max-width: 768px) {
+  .tr-wizard-review-summary__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+// =============================================================================
+// 15. Wizard
+// =============================================================================
+// Agent creation wizard shell + guided steps (Task A9.3, Stage A9 `.plan`).
+// `.tr-wizard-progress` is a non-interactive list of the semantic steps
+// (`AgentWizard.vue`) — deliberately not a Buefy `b-steps`/clickable control,
+// so a step can never be skipped by clicking ahead; navigation stays through
+// "Назад"/"Далее" only. `.tr-wizard-scenario*` reuses the `.tr-card` surface
+// (see "8. Cards and catalogs") for the "Боль" step's scenario picker, same
+// selected/disabled visual language as `.tr-tariff-selector__card` (see
+// "11. Tariffs"). `.tr-wizard-hint*` is `WizardHint.vue`'s expanded/compact
+// contextual hint box, shared by all three steps this task ships.
+// `.tr-wizard-source*` (Task A9.4) is the "Знания" step's own add/list
+// surface — see the comment above `.tr-wizard-source-add` below.
+// `.tr-wizard-model-class*` (Task A9.5) is the "Правила" step's main-path
+// model-class picker — reuses `.tr-wizard-scenario-grid`/`.tr-wizard-scenario`
+// card styling above verbatim (same selection language), only its own
+// price/availability meta row is new. `.tr-wizard-expert*` is the secondary
+// "Расширенные параметры" disclosure (`ExpertParameters.vue`): a low-contrast
+// text toggle (deliberately less prominent than the step's CTAs, `.plan`
+// "малозаметна относительно CTA") that reveals a bordered panel with
+// temperature/instruction/model catalog/BYOK. `.tr-wizard-sandbox-messages`
+// (Task A9.6) is the "Песочница" step's own bounded transcript — see its own
+// comment below for why it can't just reuse `.tr-conversation-messages`'s
+// `flex: 1` as-is. `.tr-wizard-telegram*` (Task A9.7) is the "Telegram" step's
+// two-card T1/T2 layout — see its own comment below for the QR mock/mobile
+// swap, whose responsive rule lives in "14. Responsive" above instead.
+// `.tr-wizard-review-summary*` (Task A9.8) is the "Проверка и запуск" step's
+// launch audit `<dl>` — its own narrow-screen column collapse also lives in
+// "14. Responsive" above, same convention as the Telegram step.
+
+.tr-wizard-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tr.$space-2 tr.$space-5;
+  margin: 0 0 tr.$space-4;
+  padding: 0;
+  list-style: none;
+}
+
+.tr-wizard-progress__item {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-wizard-progress__marker {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: 50%;
+  font-size: tr.$font-size-xs;
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-wizard-progress__item--current {
+  color: var(--tr-text-strong);
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-wizard-progress__item--current .tr-wizard-progress__marker {
+  color: var(--tr-text-on-primary);
+  background: var(--tr-primary);
+  border-color: var(--tr-primary);
+}
+
+.tr-wizard-progress__item--done .tr-wizard-progress__marker {
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border-color: var(--tr-primary-border);
+}
+
+.tr-wizard__intro {
+  align-items: flex-start;
+  gap: tr.$space-4;
+  margin-bottom: tr.$space-4;
+}
+
+.tr-wizard__hints-toggle {
+  flex: 0 0 auto;
+  color: var(--tr-primary);
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tr-wizard__hints-toggle:hover,
+.tr-wizard__hints-toggle:focus-visible {
+  text-decoration: underline;
+}
+
+.tr-wizard__hints-toggle:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 2px;
+}
+
+.tr-wizard-step + .tr-wizard-step {
+  margin-top: tr.$space-5;
+}
+
+.tr-wizard-hint {
+  display: flex;
+  gap: tr.$space-3;
+  align-items: flex-start;
+  margin: tr.$space-2 0 tr.$space-4;
+  padding: tr.$space-3 tr.$space-4;
+  color: var(--tr-text);
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  font-size: tr.$font-size-sm;
+}
+
+.tr-wizard-hint--compact {
+  align-items: center;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border: 0;
+  padding: 0 0 tr.$space-4;
+}
+
+.tr-wizard-hint__body {
+  min-width: 0;
+}
+
+.tr-wizard-scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: tr.$space-4;
+  margin-bottom: tr.$space-2;
+}
+
+.tr-wizard-scenario {
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: tr.$space-2;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.tr-wizard-scenario--selected {
+  border-color: var(--tr-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tr-primary) 18%, transparent);
+}
+
+.tr-wizard-scenario__title {
+  color: var(--tr-text-strong);
+}
+
+.tr-wizard-scenario__description {
+  margin: 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-wizard-scenario__example {
+  margin: tr.$space-2 0 0;
+  font-size: tr.$font-size-xs;
+}
+
+.tr-wizard-scenario__example dt {
+  color: var(--tr-text-muted);
+}
+
+.tr-wizard-scenario__example dd {
+  margin: 0 0 tr.$space-2;
+  color: var(--tr-text);
+}
+
+// `.tr-wizard-source*` — «Знания» step (Task A9.4): the shared
+// add-source/list surface for `KnowledgeStep.vue`. No collection name/type
+// picker on purpose — the wizard's personal collection stays an implementation
+// detail, not something to choose or name here (`.plan`: «скрыв название/тип
+// контейнера и ручную привязку»).
+.tr-wizard-source-add {
+  margin-bottom: tr.$space-4;
+}
+
+.tr-wizard-source-add__upload {
+  margin-bottom: tr.$space-3;
+}
+
+.tr-wizard-source-add__actions {
+  flex-wrap: wrap;
+  gap: tr.$space-2;
+}
+
+.tr-wizard-source-form {
+  margin-bottom: tr.$space-4;
+  padding: tr.$space-4;
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+}
+
+.tr-wizard-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tr-wizard-source {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-3;
+  padding: tr.$space-3;
+  background: var(--tr-surface);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+}
+
+.tr-wizard-source--loading {
+  opacity: 0.7;
+}
+
+.tr-wizard-source__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tr-wizard-source__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: tr.$space-1;
+}
+
+.tr-wizard-model-class {
+  margin: tr.$space-4 0;
+}
+
+.tr-wizard-model-class__meta {
+  display: flex;
+  gap: tr.$space-3;
+  margin: tr.$space-2 0 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+// `.tr-wizard-sandbox-messages` (Task A9.6) — the "Песочница" step's
+// transcript reuses `.tr-conversation-messages`/`.tr-chat-message` verbatim
+// (section 9 "Conversations", `AgentPlayground.vue`'s same fixed-viewport
+// chat) but sits inside a scrollable step card instead of a full-height
+// grid pane, so it needs its own bounded height instead of `flex: 1`
+// stretching to a parent that never constrains it.
+.tr-wizard-sandbox-messages {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+}
+
+.tr-wizard-expert {
+  margin-top: tr.$space-4;
+}
+
+.tr-wizard-expert__toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--tr-text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tr-wizard-expert__toggle:hover,
+.tr-wizard-expert__toggle:focus-visible {
+  color: var(--tr-primary);
+}
+
+.tr-wizard-expert__toggle:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 2px;
+}
+
+.tr-wizard-expert__panel {
+  margin-top: tr.$space-3;
+  padding: tr.$space-4;
+  background: var(--tr-surface-2);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+}
+
+.tr-wizard-expert__locale {
+  min-width: 160px;
+}
+
+// `.tr-wizard-telegram*` (Task A9.7) — the "Telegram" step's two side-by-side
+// method cards (`.tr-wizard-telegram-methods` reuses `.tr-wizard-scenario-grid`
+// verbatim for the same responsive two-column/stack behavior). T1's QR
+// placeholder (`.tr-wizard-telegram-qr`) is a plain bordered box with a
+// centered icon — never a real generated code, so nothing here can be
+// mistaken for a working scan target; its "14. Responsive" swap to
+// `.tr-wizard-telegram-open-mobile` on mobile lives with the rest of that
+// section's breakpoint overrides, above.
+.tr-wizard-telegram-method {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-3;
+}
+
+.tr-wizard-telegram-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  border: 1px dashed var(--tr-border);
+  border-radius: tr.$radius;
+  color: var(--tr-text-muted);
+}
+
+.tr-wizard-telegram-qr__caption {
+  font-size: tr.$font-size-xs;
+}
+
+.tr-wizard-telegram-open-mobile {
+  display: none;
+}
+
+.tr-wizard-telegram-states {
+  margin: 0;
+  padding-left: tr.$space-4;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-wizard-telegram-fallback {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  margin: 0;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-sm;
+}
+
+.tr-wizard-telegram-steps {
+  padding-left: tr.$space-4;
+  color: var(--tr-text);
+  font-size: tr.$font-size-sm;
+}
+
+// `.tr-wizard-review-summary*` (Task A9.8) is the "Проверка и запуск" step's
+// launch audit — a plain definition list (`<dl>`), not a card grid, since
+// every row is a single labeled fact rather than a selectable option like
+// `.tr-wizard-scenario-grid`'s cards above.
+.tr-wizard-review-summary {
+  display: grid;
+  gap: tr.$space-3;
+  margin: tr.$space-4 0;
+}
+
+.tr-wizard-review-summary__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  gap: tr.$space-3;
+  padding-block: tr.$space-2;
+  border-bottom: 1px solid var(--tr-border);
+
+  dt {
+    color: var(--tr-text-muted);
+    font-size: tr.$font-size-sm;
+    font-weight: tr.$font-weight-medium;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--tr-text);
+  }
+
+  p {
+    margin: 0 0 tr.$space-1;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.tr-wizard-review-limits {
+  margin: 0;
+  padding-left: tr.$space-4;
+  color: var(--tr-text);
+  font-size: tr.$font-size-sm;
+}
+
+// =============================================================================
+// 16. Deprecated aliases
+// =============================================================================
+// A class renamed for A3 naming/consistency reasons (Task A3.3+) keeps its
+// old selector here as a transitional alias, so a cabinet consumer that has
+// not yet ported the rename does not break silently between an
+// `ui-kit:update` and its own migration.
+//
+// Convention for every entry:
+//   // @deprecated <old-selector> — renamed to <new-selector> in <Task Id>.
+//   //   Removed in Stage B4. Tracked in agent-migration-guide.md
+//   //   "Реестр алиасов миграции".
+//   .<old-selector> {
+//     @extend .<new-selector>;
+//   }
+// An alias forwards to the current rule (`@extend`, or a duplicated
+// declaration list when `@extend` would cross an incompatible selector
+// context) — it never carries its own new styling. Keep this section's own
+// registry entry (agent-migration-guide.md) in sync with every addition and
+// removal.
+//
+// Task A3.3 — first renames: NavbarTabs (ex-ToolbarTabs), ToolbarSearch's
+// navbar-context modifier (ex-.tr-topbar__search), catalog grid/empty, and
+// the conversations/conversation split. See agent-migration-guide.md
+// "Реестр алиасов миграции" for the matching table.
+
+// @deprecated .tr-toolbar-tabs — renamed to .tr-navbar-tabs in Task A3.3.
+//   Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-toolbar-tabs {
+  @extend .tr-navbar-tabs;
+}
+
+// @deprecated .tr-toolbar-tabs__link — renamed to .tr-navbar-tabs__link in
+//   Task A3.3. Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-toolbar-tabs__link {
+  @extend .tr-navbar-tabs__link;
+}
+
+// @deprecated .tr-toolbar-tabs__link--icon — renamed to
+//   .tr-navbar-tabs__link--icon in Task A3.3. Removed in Stage B4. Tracked
+//   in agent-migration-guide.md "Реестр алиасов миграции".
+.tr-toolbar-tabs__link--icon {
+  @extend .tr-navbar-tabs__link--icon;
+}
+
+// @deprecated .tr-toolbar-tabs__icon — renamed to .tr-navbar-tabs__icon in
+//   Task A3.3. Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-toolbar-tabs__icon {
+  @extend .tr-navbar-tabs__icon;
+}
+
+// @deprecated .tr-topbar__search — renamed to .tr-search-field--navbar (a
+//   modifier of the search component's own block, not a topbar element) in
+//   Task A3.3. Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-topbar__search {
+  @extend .tr-search-field--navbar;
+}
+
+// @deprecated .tr-catalog__grid — renamed to .tr-catalog-grid in Task A3.3
+//   (BEM `__` dropped: catalog and grid are the same layout primitive, not
+//   block/element). Removed in Stage B4. Tracked in
+//   agent-migration-guide.md "Реестр алиасов миграции".
+.tr-catalog__grid {
+  @extend .tr-catalog-grid;
+}
+
+// @deprecated .tr-catalog__empty — renamed to .tr-catalog-empty in Task
+//   A3.3. Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-catalog__empty {
+  @extend .tr-catalog-empty;
+}
+
+// .tr-conversations__* (Task A3.3) split by actual ownership: elements that
+// belong only to the conversations *list* page stay under the
+// `tr-conversations-` (plural) namespace; elements that belong to the
+// reusable single-conversation chat/properties widget — verbatim reused by
+// Agents.vue for its agent sandbox, see agent-migration-guide.md section 6
+// — move to the singular `tr-conversation-` namespace. Removed in
+// Stage B4. Tracked in agent-migration-guide.md "Реестр алиасов миграции".
+
+// @deprecated .tr-conversations__panel — renamed to .tr-conversation-panel.
+.tr-conversations__panel {
+  @extend .tr-conversation-panel;
+}
+
+// @deprecated .tr-conversations__list — renamed to .tr-conversations-list.
+.tr-conversations__list {
+  @extend .tr-conversations-list;
+}
+
+// @deprecated .tr-conversations__chat — renamed to .tr-conversation-chat.
+.tr-conversations__chat {
+  @extend .tr-conversation-chat;
+}
+
+// @deprecated .tr-conversations__properties — renamed to
+//   .tr-conversation-properties.
+.tr-conversations__properties {
+  @extend .tr-conversation-properties;
+}
+
+// @deprecated .tr-conversations__placeholder — renamed to
+//   .tr-conversations-placeholder.
+.tr-conversations__placeholder {
+  @extend .tr-conversations-placeholder;
+}
+
+// @deprecated .tr-conversations__header — renamed to
+//   .tr-conversation-header.
+.tr-conversations__header {
+  @extend .tr-conversation-header;
+}
+
+// @deprecated .tr-conversations__title — renamed to .tr-conversation-title.
+.tr-conversations__title {
+  @extend .tr-conversation-title;
+}
+
+// @deprecated .tr-conversations__items — renamed to
+//   .tr-conversations-list__items.
+.tr-conversations__items {
+  @extend .tr-conversations-list__items;
+}
+
+// @deprecated .tr-conversations__empty — .tr-conversations-list__empty
+//   (Task A3.3) was folded into the unified .tr-async-state contract in
+//   Task A3.7. Removed in Stage B4. Tracked in agent-migration-guide.md
+//   "Реестр алиасов миграции".
+.tr-conversations__empty {
+  @extend .tr-async-state;
+}
+
+// @deprecated .tr-conversations__identity — renamed to
+//   .tr-conversation-identity.
+.tr-conversations__identity {
+  @extend .tr-conversation-identity;
+}
+
+// @deprecated .tr-conversations__messages — renamed to
+//   .tr-conversation-messages.
+.tr-conversations__messages {
+  @extend .tr-conversation-messages;
+}
+
+// @deprecated .tr-conversations__composer — renamed to
+//   .tr-conversation-composer.
+.tr-conversations__composer {
+  @extend .tr-conversation-composer;
+}
+
+// @deprecated .tr-conversations__composer-input — renamed to
+//   .tr-conversation-composer-input.
+.tr-conversations__composer-input {
+  @extend .tr-conversation-composer-input;
+}
+
+// @deprecated .tr-conversations__properties-body — renamed to
+//   .tr-conversation-properties-body.
+.tr-conversations__properties-body {
+  @extend .tr-conversation-properties-body;
+}
+
+// @deprecated .tr-conversations__profile — renamed to
+//   .tr-conversation-profile.
+.tr-conversations__profile {
+  @extend .tr-conversation-profile;
+}
+
+// @deprecated .tr-conversations__profile-image — renamed to
+//   .tr-conversation-profile-image.
+.tr-conversations__profile-image {
+  @extend .tr-conversation-profile-image;
+}
+
+// @deprecated .tr-conversations__details — renamed to
+//   .tr-conversation-details.
+.tr-conversations__details {
+  @extend .tr-conversation-details;
+}
+
+// @deprecated .tr-conversations__list-action — renamed to
+//   .tr-conversation-list-action.
+.tr-conversations__list-action {
+  @extend .tr-conversation-list-action;
+}
+
+// @deprecated .tr-conversations__settings-action — renamed to
+//   .tr-conversation-settings-action.
+.tr-conversations__settings-action {
+  @extend .tr-conversation-settings-action;
+}
+
+// @deprecated .tr-conversations__properties-action — renamed to
+//   .tr-conversation-properties-action.
+.tr-conversations__properties-action {
+  @extend .tr-conversation-properties-action;
+}
+
+// @deprecated .tr-conversations__properties-close — renamed to
+//   .tr-conversation-properties-close.
+.tr-conversations__properties-close {
+  @extend .tr-conversation-properties-close;
+}
+
+// @deprecated .tr-conversations__icon-action — renamed to
+//   .tr-conversation-icon-action.
+.tr-conversations__icon-action {
+  @extend .tr-conversation-icon-action;
+}

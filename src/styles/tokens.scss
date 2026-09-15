@@ -1,0 +1,130 @@
+// =============================================================================
+// @iam3xtr/ui — design tokens (tokens-only entrypoint)
+// =============================================================================
+//
+// Compiles the runtime `--tr-*` custom properties (light/dark theme, plus the
+// theme-independent z-index scale) from the Sass source of truth in
+// `_trickster-tokens.scss`. This file does not `@use` Bulma or Buefy and pulls
+// in no Vue runtime — safe to consume standalone by an application that only
+// needs the token contract (colors, z-index) without the full component
+// theme, reset, or Buefy/Bulma CSS.
+//
+// Consumption:
+//   @use "@iam3xtr/ui/styles/tokens.scss";   // Sass source
+//   import "@iam3xtr/ui/styles/tokens.css";  // pre-compiled, no Dart Sass needed
+//
+// For the full theme (Bulma/Buefy included), use
+// `@iam3xtr/ui/styles/theme.scss` (`theme.css`) instead, which re-exports this
+// same tokens module so the two contracts never drift apart.
+//
+// Origin: ported from trickster-ui-kit `src/styles/trickster-buefy.scss`
+// (section "1. Tokens"), commit 52ea8eb90d0166cdcfd71b2e1b0576357de434d1
+// (Task A11.2).
+// =============================================================================
+
+@use "./trickster-tokens" as tr;
+
+// =============================================================================
+// 1. Tokens
+// =============================================================================
+
+// =============================================================================
+// Runtime tokens
+// =============================================================================
+// Sass-переменные компилируются один раз, а эти CSS custom properties
+// позволяют переключать светлую и тёмную темы без повторной сборки.
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --tr-primary: #{tr.$primary};
+  --tr-primary-hover: #{tr.$primary-dark};
+  --tr-primary-active: #{tr.$primary-darker};
+  --tr-primary-soft: #{tr.$primary-lightest};
+  --tr-primary-border: #{tr.$primary-light};
+  --tr-text-on-primary: #fff;
+
+  --tr-app-bg: #{tr.$neutral-50};
+  --tr-sidebar-bg: #{tr.$neutral-0};
+  --tr-topbar-bg: rgb(255 255 255 / 0.94);
+  --tr-surface-1: #{tr.$neutral-0};
+  --tr-surface-2: #{tr.$neutral-25};
+  --tr-surface-3: #{tr.$neutral-100};
+  --tr-surface-hover: #{tr.$neutral-50};
+
+  --tr-text: #{tr.$neutral-800};
+  --tr-text-strong: #{tr.$neutral-850};
+  --tr-text-muted: #{tr.$neutral-600};
+  --tr-text-subtle: #{tr.$neutral-500};
+
+  --tr-border: #{tr.$neutral-200};
+  --tr-border-soft: #{tr.$neutral-150};
+  --tr-divider: #{tr.$neutral-150};
+
+  --tr-input-bg: #{tr.$neutral-0};
+  --tr-input-placeholder: #{tr.$neutral-400};
+
+  --tr-overlay: rgb(0 0 0 / 0.36);
+  --tr-shadow: #{tr.$shadow-light};
+  --tr-icon-placeholder-stripe: rgb(0 0 0 / 0.08);
+
+  --tr-success: #{tr.$success};
+  --tr-info: #{tr.$info};
+  --tr-warning: #{tr.$warning};
+  --tr-danger: #{tr.$danger};
+
+  // Z-index scale — theme-independent, declared once here (see
+  // trickster-tokens.scss "Z-index scale" for the ordering rationale).
+  // :root[data-theme="dark"] below does not need to repeat it.
+  --tr-z-content: #{tr.$z-content};
+  --tr-z-sticky-header: #{tr.$z-sticky-header};
+  --tr-z-overlay: #{tr.$z-overlay};
+  --tr-z-sidebar: #{tr.$z-sidebar};
+  --tr-z-dropdown: #{tr.$z-dropdown};
+  --tr-z-modal: #{tr.$z-modal};
+  --tr-z-toast: #{tr.$z-toast};
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  // Нейтральные серые оттенки без синего подтона.
+  --tr-primary: #{tr.$primary};
+  --tr-primary-hover: #{tr.$primary-light};
+  --tr-primary-active: #{tr.$primary};
+  --tr-primary-soft: rgb(142 100 206 / 0.16);
+  --tr-primary-border: rgb(142 100 206 / 0.42);
+  --tr-text-on-primary: #fff;
+
+  --tr-app-bg: #{tr.$neutral-950};
+  --tr-sidebar-bg: #{tr.$neutral-925};
+  --tr-topbar-bg: rgb(25 25 25 / 0.94);
+  --tr-surface-1: #{tr.$neutral-900};
+  --tr-surface-2: #{tr.$neutral-850};
+  --tr-surface-3: #{tr.$neutral-800};
+  --tr-surface-hover: #{tr.$neutral-850};
+
+  --tr-text: #{tr.$neutral-200};
+  --tr-text-strong: #{tr.$neutral-150};
+  --tr-text-muted: #{tr.$neutral-400};
+  --tr-text-subtle: #{tr.$neutral-500};
+
+  --tr-border: #{tr.$neutral-750};
+  --tr-border-soft: #{tr.$neutral-800};
+  --tr-divider: #{tr.$neutral-800};
+
+  --tr-input-bg: #{tr.$neutral-850};
+  --tr-input-placeholder: #{tr.$neutral-500};
+
+  --tr-overlay: rgb(0 0 0 / 0.68);
+  --tr-shadow: #{tr.$shadow-dark};
+  // Light-on-dark stripe (не то же 0.08 чёрного, что в светлой теме — там
+  // оно было бы почти невидимым на тёмной поверхности).
+  --tr-icon-placeholder-stripe: rgb(255 255 255 / 0.12);
+
+  --tr-success: #{tr.$success};
+  --tr-info: #{tr.$info};
+  --tr-warning: #{tr.$warning};
+  --tr-danger: #{tr.$danger};
+}
