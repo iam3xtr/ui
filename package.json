@@ -1,6 +1,6 @@
 {
   "name": "@iam3xtr/ui",
-  "version": "0.1.1",
+  "version": "0.1.1-alpha",
   "description": "Visual foundation for 3xtr.im applications",
   "license": "MIT",
   "type": "module",
