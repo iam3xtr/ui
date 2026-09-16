@@ -1,58 +1,60 @@
 # @iam3xtr/ui
 
-Visual foundation for 3xtr.im applications.
+Визуальная основа для приложений 3xtr.im.
 
-Owns design tokens, CSS/SCSS themes, and shared visual assets such as the logo
-and loader SVGs. It does not own Vue components, application state, routing,
-API clients, or domain logic — that boundary belongs to `@iam3xtr/vue`
-(components/composables) and to each consuming application.
+Владеет дизайн-токенами, CSS/SCSS-темами и общими визуальными ассетами вроде
+логотипа и SVG лоадера. Не владеет Vue-компонентами, состоянием приложения,
+роутингом или доменной логикой — эта граница принадлежит `@iam3xtr/vue`
+(компоненты/composables) и каждому потребляющему приложению.
 
-## Two independent contracts
+## Два независимых контракта
 
-The package exposes two entrypoints that a consumer picks between; neither
-one requires the other, and installing/importing the tokens-only entrypoint
-never pulls in Bulma, Buefy, or a Vue runtime.
+Пакет предоставляет две входные точки, между которыми выбирает потребитель;
+ни одна не требует другую, а установка/импорт tokens-only входной точки
+никогда не тянет за собой Bulma, Buefy или рантайм Vue.
 
-### Tokens only
+### Только токены
 
 ```js
-import "@iam3xtr/ui/styles/tokens.css"; // pre-compiled, no Dart Sass needed
+import "@iam3xtr/ui/styles/tokens.css"; // предкомпилировано, Dart Sass не нужен
 ```
 
 ```scss
-@use "@iam3xtr/ui/styles/tokens.scss"; // Sass source, if you compile it yourself
+@use "@iam3xtr/ui/styles/tokens.scss"; // Sass-исходник, если компилируете сами
 ```
 
-Defines the runtime `--tr-*` custom properties (brand/semantic colors,
-surfaces, text, borders, and the z-index scale) for both
-`:root[data-theme="light"]` and `:root[data-theme="dark"]`. No reset, no
-component styles, no Bulma/Buefy, no JavaScript.
+Определяет runtime custom properties `--tr-*` (брендовые/семантические
+цвета, поверхности, текст, границы и шкалу z-index) как для
+`:root[data-theme="light"]`, так и для `:root[data-theme="dark"]`. Никакого
+reset, никаких компонентных стилей, никакого Bulma/Buefy, никакого
+JavaScript.
 
-### Full theme
+### Полная тема
 
 ```js
 import Buefy from "buefy";
-import "@iam3xtr/ui/styles/theme.css"; // or theme.scss, see below
+import "@iam3xtr/ui/styles/theme.css"; // либо theme.scss, см. ниже
 ```
 
 ```scss
 @use "@iam3xtr/ui/styles/theme.scss";
 ```
 
-The complete Bulma/Buefy component theme (shell, navigation, forms, tables,
-overlays, etc.) — includes the same tokens as above (no duplication) plus
-every themed selector. Requires the consumer to install `bulma` and `buefy`
-themselves (declared as optional `peerDependencies` here so a tokens-only
-consumer never gets them transitively) and to load Buefy/Bulma exactly once.
-Do not also import `buefy/dist/css/buefy.css` — that produces two conflicting
-stylesheets.
+Полная тема компонентов Bulma/Buefy (shell, навигация, формы, таблицы,
+оверлеи и т. д.) — включает те же токены, что и выше (без дублирования),
+плюс все затемлённые селекторы. Требует, чтобы потребитель сам установил
+`bulma` и `buefy` (здесь они объявлены как опциональные
+`peerDependencies`, чтобы tokens-only потребитель никогда не получал их
+транзитивно) и подключил Buefy/Bulma ровно один раз. Не подключайте
+одновременно `buefy/dist/css/buefy.css` — это даст два конфликтующих
+стилевых файла.
 
-Compiling `theme.scss` yourself (instead of using the pre-built `theme.css`)
-requires `bulma` and `buefy` to be resolvable from your own `node_modules`,
-since it does `@use "bulma/sass" with (...)` and `@use "buefy/src/scss/
-buefy"`.
+Компиляция `theme.scss` самостоятельно (вместо использования готового
+`theme.css`) требует, чтобы `bulma` и `buefy` резолвились из вашего
+собственного `node_modules`, так как файл делает
+`@use "bulma/sass" with (...)` и `@use "buefy/src/scss/buefy"`.
 
-### Assets
+### Ассеты
 
 ```js
 import logo from "@iam3xtr/ui/assets/logo.svg";
@@ -60,53 +62,56 @@ import loader from "@iam3xtr/ui/assets/loader-mono.svg";
 import anthropicIcon from "@iam3xtr/ui/assets/icons/anthropic.svg";
 ```
 
-Raw SVG files, resolved by the consumer's own bundler/asset pipeline (e.g.
-`vite-svg-loader`) — there is no baked-in absolute path or app base path
-assumption, so these resolve correctly under any `base`/publicPath. The icon
-set is the approved custom-icon registry documented in
+Сырые SVG-файлы, резолвятся собственным bundler/asset-пайплайном
+потребителя (например, `vite-svg-loader`) — здесь нет захардкоженного
+абсолютного пути или допущения об app base path, поэтому они корректно
+резолвятся под любым `base`/publicPath. Набор иконок — это одобренный
+реестр кастомных иконок, задокументированный в
 [`docs/design-system.md`](https://github.com/iam3xtr/trickster-ui-kit/blob/main/docs/design-system.md#иконки)
-(LLM vendor logos, the vendor fallback, and model-kind icons) — everything
-else in the UI is a Material Design Icons name (`@mdi/font`, loaded by the
-consumer explicitly and exactly once; this package does not ship a font or an
-MDI subset).
+(логотипы вендоров LLM, fallback вендора и иконки видов моделей) — всё
+остальное в UI — это имя Material Design Icons (`@mdi/font`, подключается
+потребителем явно и ровно один раз; этот пакет не поставляет шрифт или
+подмножество MDI).
 
-## Theming
+## Тема
 
-Theme is switched by the consumer setting
-`document.documentElement.dataset.theme = "light" | "dark"`; both
-entrypoints style off that attribute, not a class.
+Тема переключается потребителем через
+`document.documentElement.dataset.theme = "light" | "dark"`; обе входные
+точки стилизуются по этому атрибуту, а не по классу.
 
-## What's not here
+## Чего здесь нет
 
-No fixtures, `.env` files, build secrets, demo data, or a second copy of the
-theme. No Vue components, Pinia stores, routing, or domain/product logic —
-see `@iam3xtr/vue` and the consuming application for those.
+Нет fixtures, `.env`-файлов, build-секретов, демо-данных или второй копии
+темы. Нет Vue-компонентов, Pinia stores, роутинга или доменной/продуктовой
+логики — за этим см. `@iam3xtr/vue` и потребляющее приложение.
 
-## Development
+## Разработка
 
 ```bash
-npm install   # pulls bulma/buefy/sass as devDependencies, needed to build theme.css
-npm run build # compiles dist/tokens.css and dist/theme.css
-npm test      # builds, then runs the export/allowlist/pack contract tests
+npm install   # подтягивает bulma/buefy/sass как devDependencies, нужны для сборки theme.css
+npm run build # компилирует dist/tokens.css и dist/theme.css
+npm test      # собирает, затем прогоняет контрактные тесты exports/allowlist/pack
 ```
 
-## Releasing
+## Публикация
 
-Publish this package **before** `@iam3xtr/vue` — `@iam3xtr/vue` declares
-`@iam3xtr/ui` as a peer dependency, so a consumer resolving both must always
-find a compatible `@iam3xtr/ui` version already published. See
-[`packages/consumers/README.md`](https://github.com/iam3xtr/trickster-ui-kit/blob/main/packages/consumers/README.md)
-in the UI Kit repo for the recommended-pair matrix, the tarball/registry
-consumer test matrix, and the partial-publish/rollback procedure.
+Публикуйте этот пакет **до** `@iam3xtr/vue` — `@iam3xtr/vue` объявляет
+`@iam3xtr/ui` как peer-зависимость, поэтому потребитель, резолвящий оба
+пакета, должен всегда находить уже опубликованную совместимую версию
+`@iam3xtr/ui`. Полный релизный процесс — порядок публикации, таблица
+рекомендуемой пары, тарбол/registry consumer-матрица, восстановление после
+partial publish и rollback — задокументирован одним нормативным текстом в
+[`docs/release-process.md`](https://github.com/iam3xtr/trickster-ui-kit/blob/main/docs/release-process.md)
+в репозитории UI Kit; здесь не дублируется.
 
-A release is cut by pushing a tag `vX.Y.Z` matching `package.json`'s
-`version` exactly — [`.github/workflows/release.yml`](.github/workflows/release.yml)
-then runs the full test suite, refuses a tag/version mismatch or an
-already-published version, and publishes to `npm.pkg.github.com` under a
-GitHub `environment: release` (configure required reviewers there so a human
-approves every publish). `packages:write` is requested only by that one job;
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml), which runs on every
-push/PR, stays `contents: read`. Full credential scoping (`GITHUB_TOKEN` vs
-the cross-repo read token) and denied-access diagnostics are documented once
-in `packages/consumers/README.md`'s "CI, release workflow and credentials"
-section, not duplicated here.
+Релиз оформляется пушем тега `vX.Y.Z`, точно совпадающего с `version` из
+`package.json` — [`.github/workflows/release.yml`](.github/workflows/release.yml)
+затем прогоняет полный набор тестов, отказывает при несовпадении тега с
+версией или уже опубликованной версии и публикует в `npm.pkg.github.com`
+под GitHub `environment: release` (настройте там required reviewers, чтобы
+каждую публикацию подтверждал человек). `packages:write` запрашивает только
+эта джоба; [`.github/workflows/ci.yml`](.github/workflows/ci.yml), который
+запускается на каждый push/PR, остаётся на `contents: read`. Полное
+разграничение кредов (`GITHUB_TOKEN` против cross-repo read токена) и
+диагностика отказа доступа — в `docs/release-process.md`, здесь не
+дублируется.
