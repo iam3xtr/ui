@@ -82,6 +82,17 @@ describe("full theme reuses tokens instead of duplicating them", () => {
   });
 });
 
+describe("Buefy semantic tag types", () => {
+  it("leaves every tag variant, including primary, to Buefy/Bulma", () => {
+    const src = read("src/styles/theme.scss");
+
+    // theme.scss loads after Buefy. Any `.tag:not(body)` rule here would
+    // override the documented Buefy examples, and the old primary override
+    // accidentally made `is-primary` visually behave like `is-light`.
+    expect(src).not.toMatch(/\.tag:not\(body\)/);
+  });
+});
+
 describe("content allowlist", () => {
   it("ships no fixtures, env files, or build secrets", () => {
     const forbidden = /\.env(\..*)?$|fixture|secret|\.pem$|\.key$/i;
