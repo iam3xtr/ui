@@ -119,6 +119,73 @@ describe("content allowlist", () => {
   });
 });
 
+describe("mobile filters keep the .tr-mobile-filters__content copy visible", () => {
+  it("scopes the 768px filter-hiding rule to the inline .tr-page-toolbar__filters wrapper, not every .tr-page-toolbar__filter", () => {
+    // `Toolbar.vue` renders the `filters` slot twice: once inline (wrapped
+    // in `.tr-page-toolbar__filters`) and once inside
+    // `.tr-mobile-filters__content` (`MobileFilters.vue`) for the <=768px
+    // trigger/panel. A bare, unscoped `.tr-page-toolbar__filter {
+    // display: none; }` rule would hide both copies and leave the mobile
+    // panel empty — this must stay scoped to the inline wrapper only.
+    const src = read("src/styles/theme.scss");
+    const lines = src.split("\n");
+    const bareRuleIndex = lines.findIndex(
+      (line) => line.trim() === ".tr-page-toolbar__filter {",
+    );
+    expect(bareRuleIndex).toBeGreaterThanOrEqual(0);
+    // The one remaining bare-selector rule is the base sizing rule, not a
+    // visibility toggle.
+    expect(lines[bareRuleIndex + 1]).not.toMatch(/display:\s*none/);
+    expect(src).toMatch(
+      /\.tr-page-toolbar__filters \.tr-page-toolbar__filter\s*\{\s*\n\s*display:\s*none;/,
+    );
+  });
+
+  it("compiled theme.css hides the inline filter pills but not the mobile-filters copy", () => {
+    const css = read("dist/theme.css");
+    // The compiled stylesheet mixes in Bulma's own unrelated 768px media
+    // blocks, so match the specific rule anywhere in the file rather than
+    // trying to isolate "the" 768px block.
+    expect(css).toMatch(
+      /\.tr-page-toolbar__filters \.tr-page-toolbar__filter\s*\{[^}]*display:\s*none/,
+    );
+    // No unscoped `.tr-page-toolbar__filter { ... display: none ... }` rule
+    // exists anywhere — that would also hide the `.tr-mobile-filters__content`
+    // copy of the same class.
+    const unscoped = [
+      ...css.matchAll(/([^{}\n]*)\.tr-page-toolbar__filter\s*\{([^}]*)\}/g),
+    ].filter(
+      ([, prefix, body]) =>
+        !prefix.includes("__filters") && /display:\s*none/.test(body),
+    );
+    expect(unscoped).toHaveLength(0);
+  });
+});
+
+describe("sidebar width and scrollbar-gutter stay the documented Issue #10.1 contract", () => {
+  it("$sidebar-width is the canonical 232px, not the drifted 200px", () => {
+    // This exact token drifted to 200px once, unnoticed, before Issue #10.1
+    // restored it — a plain string check catches a repeat silently.
+    const src = read("src/styles/_trickster-tokens.scss");
+    expect(src).toMatch(/\$sidebar-width:\s*232px;/);
+    expect(src).not.toMatch(/\$sidebar-width:\s*200px;/);
+  });
+
+  it(".tr-sidebar reserves scrollbar-gutter: stable with a supports fallback", () => {
+    const src = read("src/styles/theme.scss");
+    expect(src).toMatch(/scrollbar-gutter:\s*stable;/);
+    expect(src).toMatch(
+      /@supports not \(scrollbar-gutter:\s*stable\)\s*\{\s*\.tr-sidebar\s*\{\s*overflow-y:\s*scroll;/,
+    );
+  });
+
+  it("compiled theme.css bakes in the 232px column and the scrollbar-gutter rule", () => {
+    const css = read("dist/theme.css");
+    expect(css).toMatch(/grid-template-columns:\s*232px minmax\(0,\s*1fr\)/);
+    expect(css).toMatch(/\.tr-sidebar\s*\{[^}]*scrollbar-gutter:\s*stable/);
+  });
+});
+
 describe("assets resolve without an absolute or app base path", () => {
   it("ships the approved custom icon registry and shell assets as raw files", () => {
     const expectedIcons = [
@@ -166,5 +233,68 @@ describe("assets resolve without an absolute or app base path", () => {
       const hardcodedFill = svg.match(/fill="#[0-9a-fA-F]+"/g) ?? [];
       expect(hardcodedFill, `${file} hardcodes a fill color`).toHaveLength(0);
     }
+  });
+});
+
+describe("bundler-neutral icon registry (Issue #8.1)", () => {
+  const expectedIcons = [
+    "anthropic",
+    "brain",
+    "cerebras",
+    "cohere",
+    "deepseek",
+    "fireworks",
+    "gemini",
+    "gigachat",
+    "google",
+    "grok",
+    "groq",
+    "ionos",
+    "jina",
+    "kind-chat",
+    "kind-embedding",
+    "kind-rerank",
+    "mistral",
+    "nvidia",
+    "openai",
+    "openrouter",
+    "perplexity",
+    "sambanova",
+    "scaleway",
+    "together",
+    "xai",
+    "yandex",
+  ];
+
+  it("dist/icons.js exists and its named export matches exports[\"./icons\"]", () => {
+    expect(pkg.exports["./icons"]).toBe("./dist/icons.js");
+    expect(existsSync(path.join(root, "dist/icons.js"))).toBe(true);
+  });
+
+  it("exposes exactly the documented custom-icon set, each as raw SVG markup", async () => {
+    const { icons, default: defaultExport } = await import(
+      path.join(root, "dist/icons.js")
+    );
+    expect(Object.keys(icons).sort()).toEqual([...expectedIcons].sort());
+    expect(defaultExport).toBe(icons);
+    for (const name of expectedIcons) {
+      expect(typeof icons[name]).toBe("string");
+      expect(icons[name]).toMatch(/<svg[^>]*>/);
+    }
+  });
+
+  it("never duplicates MDI and never references Vue/Buefy in the generated module", () => {
+    const code = read("dist/icons.js");
+    expect(code).not.toMatch(/mdi|materialdesignicons/i);
+    expect(code).not.toMatch(/\bvue\b|\bbuefy\b/i);
+  });
+
+  it("has no bundler-specific loader contract (no glob, no alias, no import.meta)", () => {
+    const buildScript = read("scripts/build-icons.mjs");
+    const generated = read("dist/icons.js");
+    expect(generated).not.toMatch(/import\.meta\.glob|vite-svg-loader|@\/assets/);
+    // The generator itself reads real files by path — that is a build-time
+    // Node script, not a contract the published module exposes.
+    expect(buildScript).toMatch(/readdirSync/);
   });
 });

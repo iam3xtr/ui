@@ -121,7 +121,11 @@ $radius-large: 8px;
 $radius-xlarge: 12px;
 $radius-rounded: 9999px;
 
-$sidebar-width: 200px;
+// Task #10.1: 232px is the canonical value already documented in
+// docs/design-system.md and tokens.json — sized so the longest RU/EN/ES nav
+// label plus a stable scrollbar gutter never forces a wrap or a horizontal
+// overflow. Was drifted to 200px; restored to the documented token.
+$sidebar-width: 232px;
 $topbar-height: 64px;
 $content-max-width: 1024px;
 

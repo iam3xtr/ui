@@ -21,10 +21,11 @@
     "./styles/tokens.css": "./dist/tokens.css",
     "./styles/theme.scss": "./src/styles/theme.scss",
     "./styles/theme.css": "./dist/theme.css",
-    "./assets/*": "./src/assets/*"
+    "./assets/*": "./src/assets/*",
+    "./icons": "./dist/icons.js"
   },
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "node scripts/build.js && node scripts/build-icons.mjs",
     "lint:style": "stylelint \"src/**/*.scss\"",
     "pretest": "npm run build",
     "test": "vitest run",

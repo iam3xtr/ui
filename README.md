@@ -73,6 +73,26 @@ import anthropicIcon from "@iam3xtr/ui/assets/icons/anthropic.svg";
 потребителем явно и ровно один раз; этот пакет не поставляет шрифт или
 подмножество MDI).
 
+### Реестр иконок (bundler-neutral)
+
+```js
+import { icons } from "@iam3xtr/ui/icons";
+
+provideIconRegistry(app, icons); // см. README @iam3xtr/vue, "Реестр иконок"
+```
+
+Второй, не требующий никакого asset-пайплайна способ получить тот же набор
+custom SVG — как готовую JS map `name -> raw SVG markup string`. Никакого
+`import.meta.glob`, `?raw`/`?component`-запроса, `@`-алиаса или другого
+loader contract: `dist/icons.js` — обычный ESM-модуль (named export `icons`
+и такой же `default`), который резолвится в любом окружении с поддержкой
+`"exports"` в `package.json` — Vite, webpack, plain Node, SSR-сервер.
+Содержит ровно тот же одобренный набор custom-иконок, что и `assets/icons/*`
+(никогда MDI-имена) и не тянет Vue/Buefy. Файл — сгенерированный fallback
+(`npm run build` компилирует его из `src/assets/icons/*.svg` тем же
+скриптом, что собирает `dist/tokens.css`/`dist/theme.css`) — редактируйте
+сами `.svg`-файлы, не `dist/icons.js`.
+
 ## Тема
 
 Тема переключается потребителем через
@@ -89,7 +109,7 @@ import anthropicIcon from "@iam3xtr/ui/assets/icons/anthropic.svg";
 
 ```bash
 npm install   # подтягивает bulma/buefy/sass как devDependencies, нужны для сборки theme.css
-npm run build # компилирует dist/tokens.css и dist/theme.css
+npm run build # компилирует dist/tokens.css, dist/theme.css и dist/icons.js
 npm test      # собирает, затем прогоняет контрактные тесты exports/allowlist/pack
 ```
 
