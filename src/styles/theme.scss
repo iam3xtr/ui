@@ -1404,9 +1404,57 @@ a:hover {
 // `.dropdown-item` in section 10 — these rules only add what is specific to
 // this field.
 .tr-model-select {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: tr.$space-2;
+}
+
+.tr-model-select__trigger.button {
+  width: 100%;
+  min-height: 40px;
+  justify-content: space-between;
+  gap: tr.$space-2;
+  padding-inline: tr.$space-3;
+  text-align: left;
+  font-weight: tr.$font-weight-normal;
+}
+
+.tr-model-select__trigger-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The autocomplete input is the first row of the opened popover. Its own
+// Buefy result list follows in normal flow so focus, arrows and selection
+// continue to use the library's implementation.
+.tr-model-select__popup {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(40px + #{tr.$space-1});
+  z-index: tr.$z-dropdown;
+  padding: tr.$space-2;
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.tr-model-select__popup .autocomplete,
+.tr-model-select__popup .dropdown-menu {
+  width: 100%;
+}
+
+.tr-model-select__popup .dropdown-menu {
+  position: static;
+  padding-top: tr.$space-2;
+}
+
+.tr-model-select__popup .dropdown-content {
+  min-width: 0;
+  box-shadow: none;
 }
 
 .tr-model-select__option {
