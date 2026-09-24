@@ -82,6 +82,17 @@ describe("full theme reuses tokens instead of duplicating them", () => {
   });
 });
 
+describe("model picker layout", () => {
+  it("keeps the opened search and results in document flow", () => {
+    const src = read("src/styles/theme.scss");
+    const popup = src.match(/\.tr-model-select__popup\s*\{([^}]*)\}/)?.[1];
+
+    expect(popup).toBeDefined();
+    expect(popup).not.toMatch(/position:\s*absolute|position:\s*fixed/);
+    expect(src).toMatch(/\.tr-model-select__popup \.dropdown-menu\s*\{\s*position:\s*static/);
+  });
+});
+
 describe("Buefy semantic tag types", () => {
   it("leaves every tag variant, including primary, to Buefy/Bulma", () => {
     const src = read("src/styles/theme.scss");

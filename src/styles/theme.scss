@@ -1404,7 +1404,6 @@ a:hover {
 // `.dropdown-item` in section 10 — these rules only add what is specific to
 // this field.
 .tr-model-select {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: tr.$space-2;
@@ -1431,10 +1430,7 @@ a:hover {
 // Buefy result list follows in normal flow so focus, arrows and selection
 // continue to use the library's implementation.
 .tr-model-select__popup {
-  position: absolute;
-  inset-inline: 0;
-  top: calc(40px + #{tr.$space-1});
-  z-index: tr.$z-dropdown;
+  width: 100%;
   padding: tr.$space-2;
   background: var(--tr-surface-1);
   border: 1px solid var(--tr-border);
