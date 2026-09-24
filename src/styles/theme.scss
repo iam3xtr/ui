@@ -1535,6 +1535,48 @@ a:hover {
   font-size: tr.$font-size-sm;
 }
 
+// Этап 2 (active `.plan` "Public ModelSelect"): switch row visible only
+// in `mode === "both"`. The input is the consumer-controlled checkbox
+// (`v-model:useOwnApiKey`); the visible label and `aria-label` come
+// from the consumer as `switchLabel` / `switchAriaLabel`. The row is
+// laid out above the search input inside `.tr-model-select__popup` and
+// does not introduce a second dropdown — focus order stays linear.
+.tr-model-select__switch-row {
+  padding: tr.$space-2 tr.$space-3;
+  border-bottom: 1px solid var(--tr-border);
+}
+
+.tr-model-select__switch {
+  display: flex;
+  align-items: center;
+  gap: tr.$space-2;
+  font-weight: tr.$font-weight-normal;
+  cursor: pointer;
+}
+
+.tr-model-select__switch.is-active {
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-model-select__switch-input {
+  margin: 0;
+}
+
+.tr-model-select__switch-label {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+// `mode === "both"` and `mode === "byok"` consumer-owned BYOK key UI.
+// The package never reads the value of this slot's contents — only the
+// rendered DOM is placed beneath the search row. The container keeps
+// consistent vertical spacing and a top divider so it reads as the
+// "next" step on both inline and portal layouts.
+.tr-model-select__byok-key {
+  padding: tr.$space-2 tr.$space-3 tr.$space-3;
+  border-top: 1px solid var(--tr-border);
+}
+
 // Этап 1.1 (active `.plan` "Улучшение выбора модели и настройки собственного
 // ключа"): визуальный marker выбранной каталожной модели внутри Buefy
 // dropdown option. Определяется по canonical `model.id` (см.
