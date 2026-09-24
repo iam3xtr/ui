@@ -1086,7 +1086,8 @@ a:hover {
   background: transparent;
 }
 
-.table thead th {
+.table thead th,
+.table tfoot th {
   color: var(--tr-text-muted);
   background: var(--tr-surface-2);
   border-color: var(--tr-border-soft);
