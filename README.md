@@ -49,6 +49,12 @@ import "@iam3xtr/ui/styles/theme.css"; // либо theme.scss, см. ниже
 одновременно `buefy/dist/css/buefy.css` — это даст два конфликтующих
 стилевых файла.
 
+Тема применяет один базовый стиль заголовка к `.table thead th` и
+`.table tfoot th`. Для dropdown из `@iam3xtr/vue` сохраняются inline
+ancestor selectors; меню в Buefy body portal получает тот же visual
+contract через `.tr-dropdown-overlay-portal`, с z-index из шкалы токенов
+ниже modal.
+
 Компиляция `theme.scss` самостоятельно (вместо использования готового
 `theme.css`) требует, чтобы `bulma` и `buefy` резолвились из вашего
 собственного `node_modules`, так как файл делает
