@@ -902,6 +902,30 @@ a:hover {
   box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
 }
 
+// Этап 1 `.plan` «Плавающие dropdown и публичные компоненты модели и
+// чата»: общий overlay-слой `@iam3xtr/vue/useDropdownOverlay` ставит
+// marker `tr-dropdown-overlay` на само меню (inline и portal) и
+// `tr-dropdown-overlay-portal` на body-обёртку. Эти правила —
+// эквивалент существующих ancestor-селекторов для portal-режима,
+// чтобы открытое меню имело тот же визуальный контракт независимо
+// от того, в каком DOM-предке оно оказалось.
+.tr-dropdown-overlay-portal {
+  z-index: var(--tr-z-dropdown);
+}
+
+.tr-dropdown-overlay-portal .dropdown-content {
+  background: var(--tr-surface-1);
+  color: var(--tr-text);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius;
+  box-shadow: var(--tr-shadow);
+}
+
+.tr-toolbar-dropdown.tr-dropdown-overlay-portal .dropdown-content,
+.tr-mobile-filters.tr-dropdown-overlay-portal .dropdown-content {
+  min-width: 200px;
+}
+
 .tr-page-toolbar {
   display: flex;
   align-items: center;
