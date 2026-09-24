@@ -1610,7 +1610,11 @@ a:hover {
   border-radius: tr.$radius-small;
 }
 
-.tr-agent-settings__byok-error {
+.tr-agent-settings__byok-bfield {
+  // `b-field` под header-row'ом уже внутри `.tr-agent-settings__byok-field`,
+  // который задаёт свой `gap`. Сброс default-полей `b-field` (margin-bottom
+  // для help) убирает лишнее вертикальное пространство между control и
+  // help-text, оставляя `gap` контейнера как единственный ритм.
   margin: 0;
 }
 
