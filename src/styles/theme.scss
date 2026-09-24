@@ -1431,11 +1431,6 @@ a:hover {
 // continue to use the library's implementation.
 .tr-model-select__popup {
   width: 100%;
-  padding: tr.$space-2;
-  background: var(--tr-surface-1);
-  border: 1px solid var(--tr-border);
-  border-radius: tr.$radius;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
 }
 
 .tr-model-select__popup .autocomplete,
@@ -1448,8 +1443,14 @@ a:hover {
   padding-top: tr.$space-2;
 }
 
-.tr-model-select__popup .dropdown-content {
+// Override the generic dropdown's 360px cap and card border only here.
+.tr-model-select__popup .autocomplete .dropdown-content {
+  width: 100%;
   min-width: 0;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   box-shadow: none;
 }
 

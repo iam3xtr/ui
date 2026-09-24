@@ -91,6 +91,19 @@ describe("model picker layout", () => {
     expect(popup).not.toMatch(/position:\s*absolute|position:\s*fixed/);
     expect(src).toMatch(/\.tr-model-select__popup \.dropdown-menu\s*\{\s*position:\s*static/);
   });
+
+  it("uses the full control width without a list border", () => {
+    const src = read("src/styles/theme.scss");
+    const popup = src.match(/\.tr-model-select__popup\s*\{([^}]*)\}/)?.[1];
+    const list = src.match(/\.tr-model-select__popup \.autocomplete \.dropdown-content\s*\{([^}]*)\}/)?.[1];
+
+    expect(popup).toMatch(/width:\s*100%/);
+    expect(popup).not.toMatch(/\bborder:/);
+    expect(list).toMatch(/width:\s*100%/);
+    expect(list).toMatch(/max-width:\s*none/);
+    expect(list).toMatch(/border:\s*0/);
+  });
+
 });
 
 describe("Buefy semantic tag types", () => {
