@@ -92,18 +92,21 @@ describe("model picker layout", () => {
     expect(src).toMatch(/\.tr-model-select__popup \.dropdown-menu\s*\{\s*position:\s*static/);
   });
 
-  it("uses the full control width without a list border", () => {
+  it("uses shared chrome for the outer shell and keeps the inner list borderless", () => {
     const src = read("src/styles/theme.scss");
+    const shared = src.match(/\n\.dropdown-content\s*\{([\s\S]*?)\n\}/)?.[1];
     const popup = src.match(/\.tr-model-select__popup\s*\{([^}]*)\}/)?.[1];
     const list = src.match(/\.tr-model-select__popup \.autocomplete \.dropdown-content\s*\{([^}]*)\}/)?.[1];
+    const marker = src.match(/\.tr-model-select__option-marker\s*\{([^}]*)\}/)?.[1];
 
+    expect(shared).toMatch(/max-width:\s*min\(360px/);
+    expect(shared).toMatch(/border:\s*1px/);
     expect(popup).toMatch(/width:\s*100%/);
-    expect(popup).not.toMatch(/\bborder:/);
     expect(list).toMatch(/width:\s*100%/);
     expect(list).toMatch(/max-width:\s*none/);
     expect(list).toMatch(/border:\s*0/);
+    expect(marker).toMatch(/margin-left:\s*auto/);
   });
-
 });
 
 describe("Buefy semantic tag types", () => {
