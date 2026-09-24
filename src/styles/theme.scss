@@ -167,8 +167,8 @@ a:hover {
   // layout shift/label wrap this token fixes. `scrollbar-gutter` covers
   // every evergreen engine that ships it; the `@supports` fallback below
   // covers the rest by keeping the scrollbar (and its space) always on.
-  scrollbar-gutter: stable;
-  padding: tr.$space-6 tr.$space-4;
+  scrollbar-gutter: stable both-edges;
+  padding: tr.$space-4 tr.$space-1;
   background: var(--tr-sidebar-bg);
   border-right: 1px solid var(--tr-border-soft);
 }
