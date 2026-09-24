@@ -1454,6 +1454,30 @@ a:hover {
   font-size: tr.$font-size-sm;
 }
 
+// Этап 1.1 (active `.plan` "Улучшение выбора модели и настройки собственного
+// ключа"): визуальный marker выбранной каталожной модели внутри Buefy
+// dropdown option. Определяется по canonical `model.id` (см.
+// `ModelSelect.vue#isCatalogSelection`), а не по display name — два
+// BYOK-источника (`byok_model`/`provider_model_id`) делают имя не
+// устойчивым ключом. Сам AT-видимый статус — `aria-current="true"` на
+// option (markеr остаётся `aria-hidden` как decorative). Buefy
+// keyboard/hover/scroll/chrome остаются на месте.
+.tr-model-select__option--selected {
+  font-weight: tr.$font-weight-medium;
+}
+
+.tr-model-select__option-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--tr-primary);
+  font-weight: tr.$font-weight-semibold;
+  line-height: 1;
+}
+
 // `ApiKeySelect.vue` (Stage A6 fix, post-review): a `b-dropdown` listing the
 // workspace's saved OpenRouter keys plus an "Добавить ключ…" item that opens
 // the add-key `b-modal`. The trigger mirrors `.tr-toolbar-dropdown__trigger`
@@ -1538,6 +1562,56 @@ a:hover {
   margin: 0;
   color: var(--tr-text-muted);
   font-size: tr.$font-size-sm;
+}
+
+// Этап 2.1 (active `.plan` "Улучшение выбора модели и настройки собственного
+// ключа"): BYOK-model field в `AgentSettings.vue` устроен как label/action
+// header над `b-field`-обёрткой (которая нужна для danger-state propagation,
+// см. `BField`/`FormElementMixin`) — `b-field` сам не владеет label, чтобы
+// не получить button внутри `<label>` слота. Этот блок держит layout header'а,
+// spacing между полем и ошибкой, и сам clear button как текстовую link-action,
+// не кнопку-иконку.
+.tr-agent-settings__byok-field {
+  display: flex;
+  flex-direction: column;
+  gap: tr.$space-2;
+}
+
+.tr-agent-settings__byok-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tr.$space-2;
+  min-height: 24px;
+}
+
+.tr-agent-settings__byok-field-header .label {
+  margin: 0;
+}
+
+.tr-agent-settings__byok-clear {
+  padding: 0;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: color tr.$transition-fast;
+}
+
+.tr-agent-settings__byok-clear:hover,
+.tr-agent-settings__byok-clear:focus-visible {
+  color: var(--tr-primary);
+}
+
+.tr-agent-settings__byok-clear:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: 2px;
+  border-radius: tr.$radius-small;
+}
+
+.tr-agent-settings__byok-error {
+  margin: 0;
 }
 
 // Stage A10 review fix: status is a set of instant lifecycle actions (a
