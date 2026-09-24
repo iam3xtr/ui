@@ -211,7 +211,9 @@ describe("sidebar width and scrollbar-gutter stay the documented Issue #10.1 con
 
   it(".tr-sidebar reserves scrollbar-gutter: stable with a supports fallback", () => {
     const src = read("src/styles/theme.scss");
-    expect(src).toMatch(/scrollbar-gutter:\s*stable;/);
+    // `both-edges` also mirrors the gutter on the start edge; the track is
+    // reserved either way, so both keep the no-layout-shift guarantee.
+    expect(src).toMatch(/scrollbar-gutter:\s*stable(\s+both-edges)?;/);
     expect(src).toMatch(
       /@supports not \(scrollbar-gutter:\s*stable\)\s*\{\s*\.tr-sidebar\s*\{\s*overflow-y:\s*scroll;/,
     );
