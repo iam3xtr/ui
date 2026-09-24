@@ -902,13 +902,15 @@ a:hover {
   box-shadow: 0 0 0 3px rgb(142 100 206 / 0.16);
 }
 
-// Этап 1 `.plan` «Плавающие dropdown и публичные компоненты модели и
-// чата»: общий overlay-слой `@iam3xtr/vue/useDropdownOverlay` ставит
-// marker `tr-dropdown-overlay` на само меню (inline и portal) и
-// `tr-dropdown-overlay-portal` на body-обёртку. Эти правила —
-// эквивалент существующих ancestor-селекторов для portal-режима,
-// чтобы открытое меню имело тот же визуальный контракт независимо
-// от того, в каком DOM-предке оно оказалось.
+// Stage 1 `.plan` "Floating dropdowns": the shared overlay layer
+// `@iam3xtr/vue/useDropdownOverlay` installs the marker
+// `tr-dropdown-overlay` on the menu itself (inline AND portal) and
+// `tr-dropdown-overlay-portal` on the body-portal wrapper. Buefy does
+// not copy the originating component's class (`tr-toolbar-dropdown` /
+// `tr-mobile-filters`) onto the body wrapper, so the portal visual
+// contract must be expressed through the marker selector directly, not
+// as a compound ancestor selector that would never match. Inline
+// variants keep their existing ancestor rules above.
 .tr-dropdown-overlay-portal {
   z-index: var(--tr-z-dropdown);
 }
@@ -919,10 +921,6 @@ a:hover {
   border: 1px solid var(--tr-border);
   border-radius: tr.$radius;
   box-shadow: var(--tr-shadow);
-}
-
-.tr-toolbar-dropdown.tr-dropdown-overlay-portal .dropdown-content,
-.tr-mobile-filters.tr-dropdown-overlay-portal .dropdown-content {
   min-width: 200px;
 }
 
