@@ -59,5 +59,8 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "restricted"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true
   }
 }
