@@ -3357,6 +3357,62 @@ button.dropdown-item:hover {
   padding: tr.$space-6;
 }
 
+// Public MessageComposer (Stage 3, `@iam3xtr/vue`'s `MessageComposer.vue`).
+// Separate selector namespace from the existing `.tr-conversation-composer*`
+// block so downstream consumers that still depend on those old classes keep
+// their rendering. Layout is intentionally minimal here: the textarea
+// auto-grow geometry (single-line height, upward growth, bounded max
+// height, inner scroll) is owned by task 3 and by `MessageComposer.vue`
+// itself — this block only covers the basic chrome shared with the
+// existing `.tr-conversation-composer`.
+.tr-message-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: tr.$space-2;
+  flex: 0 0 auto;
+  padding: tr.$space-3;
+  border-top: 1px solid var(--tr-divider);
+}
+
+.tr-message-composer__textarea {
+  min-width: 0;
+  flex: 1;
+  resize: none;
+  font: inherit;
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  padding: tr.$space-2 tr.$space-3;
+}
+
+.tr-message-composer__textarea--disabled {
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-2);
+  cursor: not-allowed;
+}
+
+.tr-message-composer__submit {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  padding: 0 tr.$space-3;
+  color: var(--tr-primary);
+  background: var(--tr-primary-soft);
+  border: 1px solid var(--tr-primary-border);
+  border-radius: tr.$radius-large;
+  cursor: pointer;
+}
+
+.tr-message-composer__submit--disabled {
+  color: var(--tr-text-muted);
+  background: var(--tr-surface-2);
+  border-color: var(--tr-border);
+  cursor: not-allowed;
+}
+
 // Delivery-status badge (Task A5.7, conversations/MessageDeliveryStatus.vue)
 // sits inside a message's `<small>` timestamp line, right next to it.
 .tr-message-delivery {
