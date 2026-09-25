@@ -3293,6 +3293,70 @@ button.dropdown-item:hover {
   text-align: end;
 }
 
+// Public ChatHistory (Stage 3, `@iam3xtr/vue`'s `ChatHistory.vue`). The
+// selectors here are intentionally separate from the existing
+// `.tr-conversation-messages`/`.tr-chat-message` block above: downstream
+// consumers that still depend on those old classes keep their rendering,
+// and any later replacement of the existing block does not silently break
+// the new component's layout. Geometry mirrors the existing bubble block
+// so the visual contract stays consistent inside a bounded chat pane.
+.tr-chat-history {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tr-chat-history__list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: tr.$space-3;
+  padding: tr.$space-6;
+  background: var(--tr-surface-2);
+}
+
+.tr-chat-history__message {
+  max-width: 76%;
+  align-self: flex-start;
+  padding: tr.$space-2 tr.$space-3;
+  color: var(--tr-text);
+  background: var(--tr-surface-1);
+  border: 1px solid var(--tr-border);
+  border-radius: tr.$radius-large;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.tr-chat-history__message--outgoing {
+  align-self: flex-end;
+  background: var(--tr-primary-soft);
+  border-color: var(--tr-primary-border);
+}
+
+.tr-chat-history__text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.tr-chat-history__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: tr.$space-2;
+  margin-top: tr.$space-1;
+  color: var(--tr-text-muted);
+  font-size: tr.$font-size-xs;
+}
+
+.tr-chat-history__empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: tr.$space-6;
+}
+
 // Delivery-status badge (Task A5.7, conversations/MessageDeliveryStatus.vue)
 // sits inside a message's `<small>` timestamp line, right next to it.
 .tr-message-delivery {
