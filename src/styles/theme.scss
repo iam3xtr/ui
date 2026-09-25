@@ -3378,6 +3378,15 @@ button.dropdown-item:hover {
   min-width: 0;
   flex: 1;
   resize: none;
+  // Single-line height by default — MessageComposer.vue reads the
+  // natural scrollHeight on every input and rewrites the inline
+  // `height` from JavaScript. The max-height + overflow-y contract
+  // below caps the growth at the 100px reference from
+  // chat.3xtr.im and lets the user scroll inside the composer
+  // instead of growing into history.
+  min-height: 2.5rem;
+  max-height: 100px;
+  overflow-y: auto;
   font: inherit;
   color: var(--tr-text);
   background: var(--tr-surface-1);
