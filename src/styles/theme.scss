@@ -994,13 +994,94 @@ a:hover {
 // 5. Tabs
 // =============================================================================
 
+// The strip takes the free space between its neighbours (in `.tr-topbar`:
+// between the brand and the right-hand actions) and may shrink to zero, so it
+// never pushes or overlaps them. Plain-markup strips (links as direct
+// children) scroll natively; `NavbarTabs` scrolls its own viewport and adds
+// arrow buttons only while the tabs actually overflow.
 .tr-navbar-tabs {
   display: flex;
+  flex: 1 1 0;
   align-items: stretch;
   align-self: end;
   gap: tr.$space-1;
   min-width: 0;
   margin-inline-start: calc(#{tr.$space-8} + var(--tr-content-inline-offset));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tr-navbar-tabs::-webkit-scrollbar,
+.tr-navbar-tabs__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.tr-navbar-tabs__viewport {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+// At least as wide as the viewport so tabs share the whole free space evenly;
+// wider (its content width) once the tabs overflow it.
+.tr-navbar-tabs__track {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: tr.$space-1;
+  width: max-content;
+  min-width: 100%;
+}
+
+.tr-navbar-tabs__track > .tr-navbar-tabs__link {
+  flex: 1 0 auto;
+  justify-content: center;
+}
+
+.tr-navbar-tabs__arrow {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--tr-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: tr.$radius;
+  cursor: pointer;
+  transition: color tr.$transition-fast, opacity tr.$transition-fast;
+}
+
+.tr-navbar-tabs__arrow:hover:not(:disabled) {
+  color: var(--tr-text-strong);
+}
+
+.tr-navbar-tabs__arrow:focus-visible {
+  outline: 2px solid var(--tr-primary);
+  outline-offset: -2px;
+}
+
+.tr-navbar-tabs__arrow:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.tr-navbar-tabs__arrow-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentcolor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tr-navbar-tabs__viewport {
+    scroll-behavior: smooth;
+  }
 }
 
 .tr-navbar-tabs__link {
@@ -4429,14 +4510,7 @@ button.dropdown-item:hover {
 
 @media (max-width: 1023px) {
   .tr-navbar-tabs {
-    flex: 1 1 auto;
     margin-inline-start: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .tr-navbar-tabs::-webkit-scrollbar {
-    display: none;
   }
 
   .tr-topbar:has(.tr-navbar-tabs) .tr-search-field--navbar {
