@@ -378,3 +378,42 @@ describe("public ChatHistory / MessageComposer geometry stays a package style co
     expect(css).toMatch(/\.tr-message-composer__submit\s*\{[^}]*min-height:\s*2\.5rem/);
   });
 });
+
+describe("Dashboard tile content stays inside the tile", () => {
+  function ruleBody(src, selector) {
+    const start = src.indexOf(`\n${selector} {`);
+    if (start < 0) return "";
+    const open = src.indexOf("{", start);
+    return src.slice(open + 1, src.indexOf("}", open));
+  }
+
+  it(".tr-dashboard-link can shrink to its grid track", () => {
+    const src = read("src/styles/theme.scss");
+    expect(ruleBody(src, ".tr-dashboard-link")).toMatch(/min-width:\s*0;/);
+  });
+
+  it("the tile label wraps instead of pushing the icon out", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-dashboard-link__header > :first-child");
+    expect(block).toMatch(/min-width:\s*0;/);
+    expect(block).toMatch(/overflow-wrap:\s*anywhere;/);
+  });
+
+  it("the value and caption row wraps and its parts break long words", () => {
+    const src = read("src/styles/theme.scss");
+    const metric = ruleBody(src, ".tr-dashboard-link__metric");
+    expect(metric).toMatch(/flex-wrap:\s*wrap;/);
+    expect(metric).toMatch(/min-width:\s*0;/);
+    const parts = ruleBody(src, ".tr-dashboard-link__metric > *,\n.tr-dashboard-link__details > *");
+    expect(parts).toMatch(/min-width:\s*0;/);
+    expect(parts).toMatch(/max-width:\s*100%;/);
+    expect(parts).toMatch(/overflow-wrap:\s*anywhere;/);
+  });
+
+  it("compiled theme.css carries the wrapping rules", () => {
+    const css = read("dist/theme.css");
+    expect(css).toMatch(/\.tr-dashboard-link__metric\s*\{[^}]*flex-wrap:\s*wrap/);
+    expect(css).toMatch(/\.tr-dashboard-link__header\s*>\s*:first-child\s*\{[^}]*overflow-wrap:\s*anywhere/);
+    expect(css).toMatch(/\.tr-dashboard-link__metric\s*>\s*\*,\s*\.tr-dashboard-link__details\s*>\s*\*\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+});

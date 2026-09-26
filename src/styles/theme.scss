@@ -2044,6 +2044,7 @@ a:hover {
   display: flex;
   align-items: stretch;
   flex-direction: column;
+  min-width: 0;
   min-height: 184px;
   gap: 0.75rem;
   text-decoration: none;
@@ -2056,11 +2057,29 @@ a:hover {
   gap: 1rem;
 }
 
+// Long labels, values (workspace/profile names) and roles wrap inside the
+// tile instead of overflowing it, so the full text stays visible and remains
+// the tile link's accessible name. `min-width: 0` lets flex children shrink
+// below their longest word; the icon keeps its fixed size.
+.tr-dashboard-link__header > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .tr-dashboard-link__metric {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 0.25rem 0.5rem;
   margin-top: auto;
+}
+
+.tr-dashboard-link__metric > *,
+.tr-dashboard-link__details > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .tr-dashboard-link__metric strong {
