@@ -338,3 +338,43 @@ describe("bundler-neutral icon registry (Issue #8.1)", () => {
     expect(buildScript).toMatch(/readdirSync/);
   });
 });
+
+describe("public ChatHistory / MessageComposer geometry stays a package style contract", () => {
+  function ruleBody(src, selector) {
+    // Top-level rule only: `\n<selector> {` up to its closing brace.
+    const start = src.indexOf(`\n${selector} {`);
+    if (start < 0) return "";
+    const open = src.indexOf("{", start);
+    return src.slice(open + 1, src.indexOf("}", open));
+  }
+
+  it(".tr-chat-history owns its scroll inside a bounded pane", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-chat-history");
+    expect(block).toMatch(/min-height:\s*0;/);
+    expect(block).toMatch(/overflow-y:\s*auto;/);
+  });
+
+  it(".tr-message-composer__textarea is single-line by default and capped at 100px with inner scroll", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-message-composer__textarea");
+    expect(block).toMatch(/min-height:\s*2\.5rem;/);
+    expect(block).toMatch(/max-height:\s*100px;/);
+    expect(block).toMatch(/overflow-y:\s*auto;/);
+    expect(block).toMatch(/resize:\s*none;/);
+  });
+
+  it(".tr-message-composer__submit shares the single-line row height with the textarea", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-message-composer__submit");
+    expect(block).toMatch(/min-height:\s*2\.5rem;/);
+    expect(block).toMatch(/flex:\s*0 0 auto;/);
+  });
+
+  it("compiled theme.css carries the bounded-pane geometry", () => {
+    const css = read("dist/theme.css");
+    expect(css).toMatch(/\.tr-chat-history\s*\{[^}]*overflow-y:\s*auto/);
+    expect(css).toMatch(/\.tr-message-composer__textarea\s*\{[^}]*max-height:\s*100px/);
+    expect(css).toMatch(/\.tr-message-composer__submit\s*\{[^}]*min-height:\s*2\.5rem/);
+  });
+});

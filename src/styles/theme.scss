@@ -3304,7 +3304,12 @@ button.dropdown-item:hover {
   display: flex;
   flex: 1;
   flex-direction: column;
+  // Inside a bounded chat pane (a flex column with a fixed height) the
+  // history owns its own scroll: `min-height: 0` lets it shrink below its
+  // content and `overflow-y: auto` keeps long histories from pushing the
+  // composer out of the pane.
   min-height: 0;
+  overflow-y: auto;
 }
 
 .tr-chat-history__list {
@@ -3407,6 +3412,9 @@ button.dropdown-item:hover {
   align-items: center;
   justify-content: center;
   align-self: flex-end;
+  // Same row height as the single-line textarea so the button and the
+  // empty composer line up instead of the textarea standing taller.
+  min-height: 2.5rem;
   padding: 0 tr.$space-3;
   color: var(--tr-primary);
   background: var(--tr-primary-soft);
