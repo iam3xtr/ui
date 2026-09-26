@@ -2167,15 +2167,22 @@ a:hover {
   flex: none;
 }
 
-// Previous/next queue controls (Issue #13.1): shown only once there is
-// more than one active-eligible item; boundary-disabled, so the position
-// text never disagrees with a wrapped-around card.
+// Queue pager (Issue #13.1), placed under the active card: previous, one
+// numbered button per visible item, next. Shown only once there is more
+// than one active-eligible item; the arrows are boundary-disabled, so the
+// current number never disagrees with a wrapped-around card. Wraps onto
+// extra rows instead of overflowing when the queue is long.
 .tr-dashboard-attention__nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: tr.$space-3;
-  margin-bottom: tr.$space-3;
+  gap: tr.$space-2;
+  margin-top: tr.$space-3;
+}
+
+.tr-dashboard-attention__page {
+  min-width: 2rem;
 }
 
 .tr-dashboard-attention__restore {
