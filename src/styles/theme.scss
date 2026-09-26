@@ -1298,6 +1298,22 @@ a:hover {
   padding: tr.$space-2 tr.$space-3;
 }
 
+// Text status tag in table cells and entity cards (opt-in semantic class on
+// a plain `b-tag`, never a global `.tag` rule, so interactive/service tags
+// keep Bulma's single-line pill). A long status wraps inside its cell or
+// card header instead of widening the column or overlapping neighbours; the
+// full text stays visible and is the tag's accessible name. `anywhere`
+// lowers the min-content width, so table columns and flex rows can shrink.
+.tag.tr-status-tag {
+  max-width: 100%;
+  height: auto;
+  min-height: 2em;
+  padding-block: 0.125em;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .b-table.tr-table--breakdown .table td:last-child {
   color: var(--tr-text-strong);
   font-weight: tr.$font-weight-medium;

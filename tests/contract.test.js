@@ -417,3 +417,31 @@ describe("Dashboard tile content stays inside the tile", () => {
     expect(css).toMatch(/\.tr-dashboard-link__metric\s*>\s*\*,\s*\.tr-dashboard-link__details\s*>\s*\*\s*\{[^}]*overflow-wrap:\s*anywhere/);
   });
 });
+
+describe("text status tags stay inside table cells and entity cards", () => {
+  function ruleBody(src, selector) {
+    const start = src.indexOf(`\n${selector} {`);
+    if (start < 0) return "";
+    const open = src.indexOf("{", start);
+    return src.slice(open + 1, src.indexOf("}", open));
+  }
+
+  it(".tr-status-tag wraps a long status within its available width", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tag.tr-status-tag");
+    expect(block).toMatch(/max-width:\s*100%;/);
+    expect(block).toMatch(/height:\s*auto;/);
+    expect(block).toMatch(/white-space:\s*normal;/);
+    expect(block).toMatch(/overflow-wrap:\s*anywhere;/);
+  });
+
+  it("the wrapping is opt-in and never a global .tag override", () => {
+    const src = read("src/styles/theme.scss");
+    expect(src).not.toMatch(/\n\.tag\s*\{[^}]*white-space:\s*normal/);
+  });
+
+  it("compiled theme.css carries the status tag rule", () => {
+    const css = read("dist/theme.css");
+    expect(css).toMatch(/\.tag\.tr-status-tag\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+});
