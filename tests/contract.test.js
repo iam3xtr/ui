@@ -431,7 +431,11 @@ describe("text status tags stay inside table cells and entity cards", () => {
     const block = ruleBody(src, ".tag.tr-status-tag");
     expect(block).toMatch(/max-width:\s*100%;/);
     expect(block).toMatch(/white-space:\s*nowrap;/);
-    expect(block).toMatch(/text-overflow:\s*ellipsis;/);
+    // Bulma's inline-flex + align-items keeps the label vertically centered.
+    expect(block).not.toMatch(/display:/);
+    const label = ruleBody(src, ".tag.tr-status-tag > span");
+    expect(label).toMatch(/min-width:\s*0;/);
+    expect(label).toMatch(/text-overflow:\s*ellipsis;/);
     expect(ruleBody(src, ".b-table .table .tag.tr-status-tag"))
       .toMatch(/max-width:\s*min\(100%, 10rem\);/);
   });
@@ -443,7 +447,7 @@ describe("text status tags stay inside table cells and entity cards", () => {
 
   it("compiled theme.css carries the status tag rule", () => {
     const css = read("dist/theme.css");
-    expect(css).toMatch(/\.tag\.tr-status-tag\s*\{[^}]*text-overflow:\s*ellipsis/);
+    expect(css).toMatch(/\.tag\.tr-status-tag\s*>\s*span\s*\{[^}]*text-overflow:\s*ellipsis/);
   });
 });
 

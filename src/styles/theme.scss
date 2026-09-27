@@ -1307,14 +1307,19 @@ a:hover {
 
 // Text status tag in table cells and entity cards. Keep the pill to one line
 // and clip only its visible label; consumers expose the complete value via
-// the text node and title attribute.
+// the text node and title attribute. The pill keeps Bulma's inline-flex
+// centering, so the ellipsis lives on `b-tag`'s inner label span.
 .tag.tr-status-tag {
-  display: inline-block;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: middle;
+}
+
+.tag.tr-status-tag > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .b-table .table .tag.tr-status-tag {
