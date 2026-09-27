@@ -525,6 +525,14 @@ a:hover {
   min-width: 0;
 }
 
+// Next to a `.tr-navbar-tabs` strip the links keep only their content width,
+// so the tabs get all the free space instead of half of it. Squeezed below
+// that width they clip horizontally rather than overlap their neighbours.
+.tr-topbar:has(.tr-navbar-tabs) .tr-topbar__links {
+  flex: 0 1 auto;
+  overflow-x: clip;
+}
+
 .tr-topbar__links a {
   padding: 6px tr.$space-2;
   color: var(--tr-text-muted);

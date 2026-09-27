@@ -445,3 +445,34 @@ describe("text status tags stay inside table cells and entity cards", () => {
     expect(css).toMatch(/\.tag\.tr-status-tag\s*\{[^}]*overflow-wrap:\s*anywhere/);
   });
 });
+
+describe("navbar tabs own the free topbar width", () => {
+  function ruleBody(src, selector) {
+    const start = src.indexOf(`\n${selector} {`);
+    if (start < 0) return "";
+    const open = src.indexOf("{", start);
+    return src.slice(open + 1, src.indexOf("}", open));
+  }
+
+  it(".tr-navbar-tabs grows into the free space from a zero basis", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-navbar-tabs");
+    expect(block).toMatch(/flex:\s*1 1 0;/);
+    expect(block).toMatch(/min-width:\s*0;/);
+  });
+
+  it("topbar links next to the tabs do not grow and clip instead of overlapping", () => {
+    const src = read("src/styles/theme.scss");
+    const block = ruleBody(src, ".tr-topbar:has(.tr-navbar-tabs) .tr-topbar__links");
+    expect(block).toMatch(/flex:\s*0 1 auto;/);
+    expect(block).toMatch(/overflow-x:\s*clip;/);
+  });
+
+  it("compiled theme.css carries the topbar links override", () => {
+    const css = read("dist/theme.css");
+    expect(css).toMatch(
+      // The deprecated `.tr-toolbar-tabs` alias (@extend) joins the :has() list.
+      /\.tr-topbar:has\(\.tr-navbar-tabs[^)]*\)\s+\.tr-topbar__links\s*\{[^}]*flex:\s*0 1 auto/,
+    );
+  });
+});
