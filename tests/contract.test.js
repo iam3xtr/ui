@@ -426,23 +426,24 @@ describe("text status tags stay inside table cells and entity cards", () => {
     return src.slice(open + 1, src.indexOf("}", open));
   }
 
-  it(".tr-status-tag wraps a long status within its available width", () => {
+  it(".tr-status-tag ellipsizes long status text and caps table tags", () => {
     const src = read("src/styles/theme.scss");
     const block = ruleBody(src, ".tag.tr-status-tag");
     expect(block).toMatch(/max-width:\s*100%;/);
-    expect(block).toMatch(/height:\s*auto;/);
-    expect(block).toMatch(/white-space:\s*normal;/);
-    expect(block).toMatch(/overflow-wrap:\s*anywhere;/);
+    expect(block).toMatch(/white-space:\s*nowrap;/);
+    expect(block).toMatch(/text-overflow:\s*ellipsis;/);
+    expect(ruleBody(src, ".b-table .table .tag.tr-status-tag"))
+      .toMatch(/max-width:\s*min\(100%, 10rem\);/);
   });
 
-  it("the wrapping is opt-in and never a global .tag override", () => {
+  it("the ellipsis is opt-in and never a global .tag override", () => {
     const src = read("src/styles/theme.scss");
-    expect(src).not.toMatch(/\n\.tag\s*\{[^}]*white-space:\s*normal/);
+    expect(src).not.toMatch(/\n\.tag\s*\{[^}]*text-overflow:\s*ellipsis/);
   });
 
   it("compiled theme.css carries the status tag rule", () => {
     const css = read("dist/theme.css");
-    expect(css).toMatch(/\.tag\.tr-status-tag\s*\{[^}]*overflow-wrap:\s*anywhere/);
+    expect(css).toMatch(/\.tag\.tr-status-tag\s*\{[^}]*text-overflow:\s*ellipsis/);
   });
 });
 
@@ -459,6 +460,14 @@ describe("navbar tabs own the free topbar width", () => {
     const block = ruleBody(src, ".tr-navbar-tabs");
     expect(block).toMatch(/flex:\s*1 1 0;/);
     expect(block).toMatch(/min-width:\s*0;/);
+  });
+
+  it("links retain their natural widths within the scrollable strip", () => {
+    const src = read("src/styles/theme.scss");
+    expect(ruleBody(src, ".tr-navbar-tabs__track"))
+      .not.toMatch(/min-width:\s*100%;/);
+    expect(ruleBody(src, ".tr-navbar-tabs__track > .tr-navbar-tabs__link"))
+      .toMatch(/flex:\s*0 0 auto;/);
   });
 
   it("topbar links next to the tabs do not grow and clip instead of overlapping", () => {

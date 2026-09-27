@@ -53,7 +53,10 @@ import "@iam3xtr/ui/styles/theme.css"; // либо theme.scss, см. ниже
 `.table tfoot th`. Для dropdown из `@iam3xtr/vue` сохраняются inline
 ancestor selectors; меню в Buefy body portal получает тот же visual
 contract через `.tr-dropdown-overlay-portal`, с z-index из шкалы токенов
-ниже modal.
+ниже modal. `tr-status-tag` держит текст в одну строку с ellipsis;
+в таблице его ширина ограничена 10rem. `tr-model-select__trigger`
+имеет одинаковую рамку в обычном и BYOK-режиме. Ссылки `NavbarTabs`
+сохраняют естественную ширину.
 
 Компиляция `theme.scss` самостоятельно (вместо использования готового
 `theme.css`) требует, чтобы `bulma` и `buefy` резолвились из вашего

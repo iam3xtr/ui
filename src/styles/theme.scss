@@ -1033,19 +1033,18 @@ a:hover {
   scrollbar-width: none;
 }
 
-// At least as wide as the viewport so tabs share the whole free space evenly;
-// wider (its content width) once the tabs overflow it.
+// Links keep their natural width; the viewport owns any remaining space and
+// scrolls when the content no longer fits.
 .tr-navbar-tabs__track {
   display: flex;
   flex: 0 0 auto;
   align-items: stretch;
   gap: tr.$space-1;
   width: max-content;
-  min-width: 100%;
 }
 
 .tr-navbar-tabs__track > .tr-navbar-tabs__link {
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   justify-content: center;
 }
 
@@ -1306,20 +1305,20 @@ a:hover {
   padding: tr.$space-2 tr.$space-3;
 }
 
-// Text status tag in table cells and entity cards (opt-in semantic class on
-// a plain `b-tag`, never a global `.tag` rule, so interactive/service tags
-// keep Bulma's single-line pill). A long status wraps inside its cell or
-// card header instead of widening the column or overlapping neighbours; the
-// full text stays visible and is the tag's accessible name. `anywhere`
-// lowers the min-content width, so table columns and flex rows can shrink.
+// Text status tag in table cells and entity cards. Keep the pill to one line
+// and clip only its visible label; consumers expose the complete value via
+// the text node and title attribute.
 .tag.tr-status-tag {
+  display: inline-block;
   max-width: 100%;
-  height: auto;
-  min-height: 2em;
-  padding-block: 0.125em;
-  line-height: 1.25;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.b-table .table .tag.tr-status-tag {
+  max-width: min(100%, 10rem);
 }
 
 .b-table.tr-table--breakdown .table td:last-child {
@@ -1545,6 +1544,8 @@ a:hover {
   padding-inline: tr.$space-3;
   text-align: left;
   font-weight: tr.$font-weight-normal;
+  background: var(--tr-input-bg);
+  border: 1px solid var(--tr-border);
 }
 
 // Invalid state on the closed trigger: the popup search input is hidden
@@ -2175,18 +2176,21 @@ a:hover {
   flex: none;
 }
 
-// Queue pager (Issue #13.1), placed under the active card: previous, one
-// numbered button per visible item, next. Shown only once there is more
-// than one active-eligible item; the arrows are boundary-disabled, so the
-// current number never disagrees with a wrapped-around card. Wraps onto
-// extra rows instead of overflowing when the queue is long.
+// Queue pager: arrows at the card edges, visible item numbers centered.
 .tr-dashboard-attention__nav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
   gap: tr.$space-2;
   margin-top: tr.$space-3;
+}
+
+.tr-dashboard-attention__pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: tr.$space-2;
+  min-width: 0;
 }
 
 .tr-dashboard-attention__page {
@@ -2675,6 +2679,14 @@ a.dropdown-item.tr-dropdown-danger:hover {
 .modal-card-foot {
   background: var(--tr-surface-2);
   border-color: var(--tr-border);
+}
+
+.modal-card-foot {
+  gap: tr.$space-3;
+}
+
+.modal-card-foot .button:not(:last-child) {
+  margin-right: 0;
 }
 
 .modal-card-title {
@@ -4342,6 +4354,13 @@ button.dropdown-item:hover {
   border-color: var(--tr-border);
 }
 
+.tr-demo-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: calc(var(--tr-z-toast) + 1);
+}
+
 .tr-demo-panel-trigger:hover {
   background: var(--tr-input-bg);
   border-color: var(--tr-text-subtle);
@@ -4576,7 +4595,6 @@ button.dropdown-item:hover {
   }
 
   .tr-topbar > .tr-brand,
-  .tr-demo-panel,
   .tr-workspace-dropdown,
   .tr-notifications-dropdown,
   .tr-user-summary {
